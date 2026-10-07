@@ -3,7 +3,7 @@ export type ReviewStatus = "PENDING" | "APPROVED" | "REJECTED"
 export interface Review {
   id: number
   userId: number
-  userName: string
+  userName?: string
   flatId: number
   flatAddress?: string
   title: string
