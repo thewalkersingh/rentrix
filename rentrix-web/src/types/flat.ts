@@ -62,20 +62,24 @@ export interface Flat {
 }
 
 export interface FlatFilters {
-  city?: string
-  state?: string
-  minRent?: number
-  maxRent?: number
-  minRooms?: number
-  maxRooms?: number
-  furnished?: boolean
-  parking?: boolean
-  propertyType?: PropertyType
-  available?: boolean
-  q?: string
-  page?: number
-  size?: number
-  sort?: string
+   city?: string
+   state?: string
+   minRent?: number
+   maxRent?: number
+   minRooms?: number
+   maxRooms?: number
+   furnished?: boolean
+   parking?: boolean
+   propertyType?: PropertyType
+   available?: boolean
+   q?: string
+   page?: number
+   size?: number
+   sort?: string
+
+   // v0.1.2 — review-based
+   minRating?: number
+   hasReviews?: boolean
 }
 
 export interface CreateFlatRequest {

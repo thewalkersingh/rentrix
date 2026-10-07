@@ -22,7 +22,7 @@ function locationLine(flat: FlatSummary) {
 }
 
 function statusLabel(flat: FlatSummary) {
-  if (flat.visible) return { text: "Live", variant: "default" as const }
+  if (flat.visible) return { text: "Live", variant: "success" as const }
   return { text: "Pending review", variant: "secondary" as const }
 }
 

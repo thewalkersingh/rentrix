@@ -21,9 +21,30 @@ const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
   { value: "VILLA", label: "Villa" },
 ]
 
+// Rating filter options — value is a string because Select requires it
+type RatingOption = "any" | "has" | "8" | "6" | "4"
+
+const RATING_OPTIONS: { value: RatingOption; label: string }[] = [
+  { value: "any", label: "Any rating" },
+  { value: "has", label: "Has reviews" },
+  { value: "8", label: "Excellent (8+)" },
+  { value: "6", label: "Good (6+)" },
+  { value: "4", label: "OK (4+)" },
+]
+
+/** Convert current filter state → select value */
+function currentRatingValue(filters: { minRating?: number; hasReviews?: boolean }): RatingOption {
+  if (filters.hasReviews === true && filters.minRating == null) return "has"
+  if (filters.minRating === 8) return "8"
+  if (filters.minRating === 6) return "6"
+  if (filters.minRating === 4) return "4"
+  return "any"
+}
+
 export function FlatFilters() {
   const filters = useFiltersStore((s) => s.filters)
   const setFilter = useFiltersStore((s) => s.setFilter)
+  const setFilters = useFiltersStore((s) => s.setFilters)
   const resetFilters = useFiltersStore((s) => s.resetFilters)
 
   const hasAnyFilter =
@@ -35,7 +56,20 @@ export function FlatFilters() {
     filters.furnished != null ||
     filters.parking != null ||
     filters.propertyType != null ||
-    filters.available != null
+    filters.available != null ||
+    filters.minRating != null ||
+    filters.hasReviews === true
+
+  const handleRatingChange = (v: RatingOption) => {
+    // Clear both, then set based on selection
+    if (v === "any") {
+      setFilters({ minRating: undefined, hasReviews: undefined })
+    } else if (v === "has") {
+      setFilters({ minRating: undefined, hasReviews: true })
+    } else {
+      setFilters({ minRating: Number(v), hasReviews: undefined })
+    }
+  }
 
   return (
     <div className="space-y-4 rounded-lg border bg-card p-4">
@@ -58,6 +92,24 @@ export function FlatFilters() {
         />
       </div>
 
+      {/* ── Rating filter ──────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <Label>Rating</Label>
+        <Select value={currentRatingValue(filters)} onValueChange={handleRatingChange}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RATING_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* ── Rent range ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-2">
           <Label htmlFor="minRent">Min rent</Label>
@@ -85,17 +137,16 @@ export function FlatFilters() {
         </div>
       </div>
 
+      {/* ── Rooms ──────────────────────────────────────────────────── */}
       <div className="space-y-2">
         <Label>Rooms</Label>
         <Select
           value={filters.minRooms != null ? String(filters.minRooms) : "any"}
           onValueChange={(v) => {
             if (v === "any") {
-              setFilter("minRooms", undefined)
-              setFilter("maxRooms", undefined)
+              setFilters({ minRooms: undefined, maxRooms: undefined })
             } else {
-              setFilter("minRooms", Number(v))
-              setFilter("maxRooms", Number(v))
+              setFilters({ minRooms: Number(v), maxRooms: Number(v) })
             }
           }}
         >
@@ -113,6 +164,7 @@ export function FlatFilters() {
         </Select>
       </div>
 
+      {/* ── Property type ──────────────────────────────────────────── */}
       <div className="space-y-2">
         <Label>Property type</Label>
         <Select
@@ -135,6 +187,7 @@ export function FlatFilters() {
         </Select>
       </div>
 
+      {/* ── Furnishing ─────────────────────────────────────────────── */}
       <div className="space-y-2">
         <Label>Furnishing</Label>
         <Select
@@ -152,6 +205,10 @@ export function FlatFilters() {
         </Select>
       </div>
 
+      {/*TODO: We have to decide if we can put Rooms and Furnishing filters together*/}
+
+
+      {/* ── Parking ────────────────────────────────────────────────── */}
       <div className="space-y-2">
         <Label>Parking</Label>
         <Select
@@ -169,6 +226,7 @@ export function FlatFilters() {
         </Select>
       </div>
 
+      {/* ── Availability ───────────────────────────────────────────── */}
       <div className="space-y-2">
         <Label>Availability</Label>
         <Select

@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom"
+import { Link, NavLink, Outlet } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/features/auth/store"
@@ -7,6 +7,8 @@ import { env } from "@/lib/env"
 import { useLogout } from "@/features/auth/hooks/useLogout.ts"
 import { useMe } from "@/features/auth/hooks/useMe.ts"
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx"
+import { House, Plus } from "lucide-react"
+import { cn } from "cn"
 
 export function RootLayout() {
   useAuthBootstrap()
@@ -18,16 +20,29 @@ export function RootLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <Link to="/" className="text-lg font-semibold">
-            {env.VITE_APP_NAME}
+          <Link to="/" className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <House className="h-4 w-4" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight">{env.VITE_APP_NAME}</span>
           </Link>
 
           <nav className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/flats">Flats</Link>
-            </Button>
+            <NavLink
+              to="/flats"
+              className={({ isActive }) =>
+                cn(
+                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )
+              }
+            >
+              Flats
+            </NavLink>
 
             {isAuthenticated && (
               <Button asChild variant="ghost" size="sm">
@@ -37,6 +52,14 @@ export function RootLayout() {
             {isAuthenticated && (
               <Button asChild variant="ghost" size="sm">
                 <Link to="/me/flats">My Flats</Link>
+              </Button>
+            )}
+            {isAuthenticated && (
+              <Button asChild size="sm">
+                <Link to="/me/flats/new">
+                  <Plus className="mr-1 h-4 w-4" />
+                  <span className="hidden sm:inline">Add place</span>
+                </Link>
               </Button>
             )}
             {user?.role === "ADMIN" && (

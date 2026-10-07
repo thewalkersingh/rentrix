@@ -13,7 +13,7 @@ export default function FlatsPage() {
   const { data, isLoading, isError, error, refetch, isFetching, isSlow } = useFlats()
   const filters = useFiltersStore((s) => s.filters)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-
+  const resetFilters = useFiltersStore((s) => s.resetFilters)
   const flats = data?.content ?? []
 
   return (
@@ -76,8 +76,11 @@ export default function FlatsPage() {
           )}
 
           {!isLoading && !isError && flats.length === 0 && (
-            <div className="rounded-lg border py-16 text-center text-muted-foreground">
-              No flats match your filters.
+            <div className="rounded-lg border py-16 text-center">
+              <p className="text-muted-foreground">No flats match your filters.</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>
+                Clear filters
+              </Button>
             </div>
           )}
 
