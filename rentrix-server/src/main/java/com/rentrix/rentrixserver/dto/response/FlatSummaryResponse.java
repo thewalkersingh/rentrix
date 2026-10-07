@@ -35,4 +35,7 @@ public class FlatSummaryResponse {
 	private Double averageRating;
 	private Long reviewCount;
 	
+	private Boolean verified;
+	private Boolean visible;
+	
 }

@@ -1,5 +1,6 @@
 package com.rentrix.rentrixserver.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,10 +16,19 @@ import java.util.function.Function;
 @AllArgsConstructor
 public class PageResponse<T> {
 	
+	@JsonProperty("content")
 	private List<T> content;
+	
+	@JsonProperty("totalElements")
 	private long totalElements;
+	
+	@JsonProperty("totalPages")
 	private int totalPages;
+	
+	@JsonProperty("number")
 	private int number;
+	
+	@JsonProperty("size")
 	private int size;
 	
 	/**

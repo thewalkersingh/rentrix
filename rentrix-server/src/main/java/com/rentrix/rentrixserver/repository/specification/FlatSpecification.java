@@ -12,10 +12,16 @@ public final class FlatSpecification {
 	
 	private FlatSpecification() {}
 	
+	public static Specification<Flat> visibleAndFiltered(FlatFilterRequest filter) {
+		return withFilters(filter)
+					 .and((root, query, cb) -> cb.isTrue(root.get("visible")));
+	}
+	
 	/**
 	 * Builds a composable Specification from the filter request.
 	 * Every non-null filter becomes an AND predicate.
 	 */
+	
 	public static Specification<Flat> withFilters(FlatFilterRequest filter) {
 		return (root, query, cb) -> {
 			if (filter == null) return cb.conjunction();

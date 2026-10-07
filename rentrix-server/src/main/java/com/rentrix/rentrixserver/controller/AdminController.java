@@ -3,8 +3,10 @@ package com.rentrix.rentrixserver.controller;
 import com.rentrix.rentrixserver.dto.ModerateReviewRequest;
 import com.rentrix.rentrixserver.dto.PageResponse;
 import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.FlatResponse;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import com.rentrix.rentrixserver.service.AdminService;
+import com.rentrix.rentrixserver.service.FlatService;
 import com.rentrix.rentrixserver.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,39 +25,54 @@ public class AdminController {
 	
 	private final AdminService adminService;
 	private final ReviewService reviewService;
+	private final FlatService flatService;
 	
-	// -- Moderation queue ----------------------------------------------------
-	
-	/** List reviews filtered by status (default PENDING). */
-	@GetMapping("/reviews")
-	public PageResponse<ReviewDto> listReviews(@RequestParam(defaultValue = "PENDING") ReviewStatus status,
-		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-		return adminService.getReviewsByStatus(status, pageable);
+	// -- Direct Flat CRUD (admin override) --------------------------------
+	@PostMapping("/flats/{id}/verify")
+	public ResponseEntity<FlatResponse> verifyFlat(@PathVariable Long id) {
+		return ResponseEntity.ok(flatService.setVerified(id, true));
 	}
 	
-	/** Approve or reject a pending review. */
-	@PatchMapping("/reviews/{id}")
-	public ResponseEntity<ReviewDto> moderateReview(@PathVariable Long id,
-		@Valid @RequestBody ModerateReviewRequest req) {
-		return ResponseEntity.ok(adminService.moderate(id, req.getStatus()));
+	@DeleteMapping("/flats/{id}/verify")
+	public ResponseEntity<FlatResponse> unverifyFlat(@PathVariable Long id) {
+		return ResponseEntity.ok(flatService.setVerified(id, false));
+	}
+	
+	@PostMapping("/flats/{id}/visible")
+	public ResponseEntity<FlatResponse> showFlat(@PathVariable Long id) {
+		return ResponseEntity.ok(flatService.setVisible(id, true));
+	}
+	
+	@DeleteMapping("/flats/{id}/visible")
+	public ResponseEntity<FlatResponse> hideFlat(@PathVariable Long id) {
+		return ResponseEntity.ok(flatService.setVisible(id, false));
 	}
 	
 	// -- Direct review CRUD (admin override) --------------------------------
-	
-	/** Get any review by ID regardless of status. */
 	@GetMapping("/reviews/{id}")
 	public ResponseEntity<ReviewDto> getReviewById(@PathVariable Long id) {
 		return ResponseEntity.ok(reviewService.getReviewById(id));
 	}
 	
-	/** Delete a review (moderation cleanup). */
 	@DeleteMapping("/reviews/{id}")
 	public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
 		reviewService.deleteReview(id);
 		return ResponseEntity.noContent().build();
 	}
 	
-	//TODO: Change Review assignment to given flat (Optional)
+	// -- Moderation queue ----------------------------------------------------
+	@GetMapping("/reviews")
+	public PageResponse<ReviewDto> listReviews(@RequestParam(defaultValue = "PENDING") ReviewStatus status,
+		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+		return adminService.getReviewsByStatus(status, pageable);
+	}
+	
+	@PatchMapping("/reviews/{id}")
+	public ResponseEntity<ReviewDto> moderateReview(@PathVariable Long id,
+		@Valid @RequestBody ModerateReviewRequest req) {
+		return ResponseEntity.ok(adminService.moderate(id, req.getStatus()));
+	}
+	
 }
 /*
 Note:We are using @PreAuthorize("hasRole('ADMIN')") on the class — every method requires ADMIN. Combined with

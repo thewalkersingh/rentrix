@@ -31,7 +31,7 @@ public class User extends BaseEntity implements UserDetails {
 	@Enumerated(EnumType.STRING)
 	private Role role;
 	
-	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	private UserDetail userDetail;
@@ -44,7 +44,7 @@ public class User extends BaseEntity implements UserDetails {
 	
 	@Override
 	public String getUsername() {
-		return email; // login via email
+		return userDetail != null ? userDetail.getFirstName() : email; // login via email
 	}
 	
 	@Column(nullable = false)

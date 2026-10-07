@@ -3,6 +3,7 @@ package com.rentrix.rentrixserver.service.impl;
 import com.rentrix.rentrixserver.dto.CreateReviewRequest;
 import com.rentrix.rentrixserver.dto.PageResponse;
 import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.User;
@@ -18,6 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -87,6 +92,24 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 		reviewRepository.deleteById(id);
 		return "Review with id: " + id + " has been deleted";
+	}
+	
+	@Override
+	public Map<Long, RatingAggregate> getRatingAggregates(List<Long> flatIds) {
+		if (flatIds == null || flatIds.isEmpty()) {
+			return Map.of();
+		}
+		
+		List<Object[]> rows = reviewRepository.findRatingAggregates(flatIds);
+		
+		Map<Long, RatingAggregate> result = new HashMap<>();
+		for (Object[] row : rows) {
+			Long flatId = ((Number) row[0]).longValue();
+			Double avg = row[1] != null ? ((Number) row[1]).doubleValue() : null;
+			Long count = row[2] != null ? ((Number) row[2]).longValue() : 0L;
+			result.put(flatId, new RatingAggregate(avg, count));
+		}
+		return result;
 	}
 	
 }

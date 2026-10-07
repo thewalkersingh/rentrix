@@ -1,6 +1,7 @@
 package com.rentrix.rentrixserver.mapper;
 
 import com.rentrix.rentrixserver.dto.common.AddressDto;
+import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
@@ -31,6 +32,8 @@ public final class FlatMapper {
 																		 .description(flat.getDescription())
 																		 .available(flat.getAvailable())
 																		 .address(toAddressDto(flat.getAddress()))
+																		 .verified(flat.getVerified())
+																		 .visible(flat.getVisible())
 																		 .createdAt(flat.getCreatedAt())
 																		 .updatedAt(flat.getUpdatedAt());
 		
@@ -38,10 +41,12 @@ public final class FlatMapper {
 			b.ownerId(flat.getOwner().getId())
 			 .ownerName(flat.getOwner().getDisplayName());
 		}
+		if (flat.getCreatedBy() != null) {
+			b.createdById(flat.getCreatedBy().getId())
+			 .createdByName(flat.getCreatedBy().getDisplayName());
+		}
 		
-		// Ratings deferred — null for now
 		b.averageRating(null).reviewCount(null);
-		
 		return b.build();
 	}
 	
@@ -63,9 +68,11 @@ public final class FlatMapper {
 										  .availableFrom(flat.getAvailableFrom())
 										  .propertyType(flat.getPropertyType())
 										  .available(flat.getAvailable())
+										  .addressLine(addressLine)
 										  .city(city)
 										  .state(state)
-										  .addressLine(addressLine)
+										  .verified(flat.getVerified())
+										  .visible(flat.getVisible())
 										  .averageRating(null)
 										  .reviewCount(null)
 										  .build();
@@ -153,6 +160,26 @@ public final class FlatMapper {
 		if (src.getCity() != null) target.setCity(src.getCity());
 		if (src.getState() != null) target.setState(src.getState());
 		if (src.getZipCode() != null) target.setZipCode(src.getZipCode());
+	}
+	// In FlatMapper.java, add these methods. Keep the existing ones too —
+// they'll be used when no aggregate is available (single detail fetch without ratings).
+	
+	public static FlatSummaryResponse toSummary(Flat flat, RatingAggregate aggregate) {
+		FlatSummaryResponse response = toSummary(flat);
+		if (response != null && aggregate != null) {
+			response.setAverageRating(aggregate.averageRating());
+			response.setReviewCount(aggregate.reviewCount());
+		}
+		return response;
+	}
+	
+	public static FlatResponse toResponse(Flat flat, RatingAggregate aggregate) {
+		FlatResponse response = toResponse(flat);
+		if (response != null && aggregate != null) {
+			response.setAverageRating(aggregate.averageRating());
+			response.setReviewCount(aggregate.reviewCount());
+		}
+		return response;
 	}
 	
 }
