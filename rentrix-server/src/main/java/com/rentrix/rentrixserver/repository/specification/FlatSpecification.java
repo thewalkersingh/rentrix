@@ -2,7 +2,11 @@ package com.rentrix.rentrixserver.repository.specification;
 
 import com.rentrix.rentrixserver.dto.filter.FlatFilterRequest;
 import com.rentrix.rentrixserver.entity.Flat;
+import com.rentrix.rentrixserver.entity.Review;
+import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
@@ -14,13 +18,8 @@ public final class FlatSpecification {
 	
 	public static Specification<Flat> visibleAndFiltered(FlatFilterRequest filter) {
 		return withFilters(filter)
-					 .and((root, query, cb) -> cb.isTrue(root.get("visible")));
+					 .and((root, query, cb) -> cb.equal(root.get("visible"), true));
 	}
-	
-	/**
-	 * Builds a composable Specification from the filter request.
-	 * Every non-null filter becomes an AND predicate.
-	 */
 	
 	public static Specification<Flat> withFilters(FlatFilterRequest filter) {
 		return (root, query, cb) -> {
@@ -28,7 +27,7 @@ public final class FlatSpecification {
 			
 			List<Predicate> predicates = new ArrayList<>();
 			
-			// Address city / state (embedded)
+			// Address city / state
 			if (filter.getCity() != null && !filter.getCity().isBlank()) {
 				String city = "%" + filter.getCity().toLowerCase().trim() + "%";
 				predicates.add(cb.like(cb.lower(root.get("address").get("city")), city));
@@ -62,7 +61,7 @@ public final class FlatSpecification {
 				predicates.add(cb.equal(root.get("parking"), filter.getParking()));
 			}
 			if (filter.getAvailable() != null) {
-				predicates.add(cb.equal(root.get("available"), filter.getAvailable()));
+				predicates.add(cb.equal(root.get("isAvailable"), filter.getAvailable()));
 			}
 			
 			// Property type
@@ -70,16 +69,45 @@ public final class FlatSpecification {
 				predicates.add(cb.equal(root.get("propertyType"), filter.getPropertyType()));
 			}
 			
-			// Available by date (availableFrom <= filter.availableFrom)
+			// Available by date
 			if (filter.getAvailableFrom() != null) {
-				predicates.add(cb.lessThanOrEqualTo(root.get("availableFrom"), filter.getAvailableFrom()));
+				predicates.add(cb.lessThanOrEqualTo(
+					root.get("availableFrom"), filter.getAvailableFrom()));
 			}
 			
-			// Free-text search across addressLine + description
+			// Free-text search
 			if (filter.getQ() != null && !filter.getQ().isBlank()) {
 				String q = "%" + filter.getQ().toLowerCase().trim() + "%";
-				predicates.add(cb.or(cb.like(cb.lower(root.get("address").get("addressLine")), q),
-					cb.like(cb.lower(root.get("description")), q)));
+				predicates.add(cb.or(
+					cb.like(cb.lower(root.get("address").get("addressLine")), q),
+					cb.like(cb.lower(root.get("description")), q)
+				));
+			}
+			
+			// ── Review-based filters ──────────────────────────────────────────
+			
+			// Min average rating — subquery on AVG(rating) for approved reviews
+			if (filter.getMinRating() != null) {
+				Subquery<Double> avgSub = query.subquery(Double.class);
+				Root<Review> reviewRoot = avgSub.from(Review.class);
+				avgSub.select(cb.avg(reviewRoot.get("rating")))
+						.where(cb.and(
+							cb.equal(reviewRoot.get("flat"), root),
+							cb.equal(reviewRoot.get("status"), ReviewStatus.APPROVED)
+						));
+				predicates.add(cb.greaterThanOrEqualTo(avgSub, filter.getMinRating().doubleValue()));
+			}
+			
+			// Has reviews — subquery on COUNT > 0
+			if (Boolean.TRUE.equals(filter.getHasReviews())) {
+				Subquery<Long> countSub = query.subquery(Long.class);
+				Root<Review> reviewRoot = countSub.from(Review.class);
+				countSub.select(cb.count(reviewRoot))
+						  .where(cb.and(
+							  cb.equal(reviewRoot.get("flat"), root),
+							  cb.equal(reviewRoot.get("status"), ReviewStatus.APPROVED)
+						  ));
+				predicates.add(cb.greaterThan(countSub, 0L));
 			}
 			
 			return cb.and(predicates.toArray(new Predicate[0]));

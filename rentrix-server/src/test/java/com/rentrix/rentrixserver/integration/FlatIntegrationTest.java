@@ -6,7 +6,7 @@ import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import com.rentrix.rentrixserver.support.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -107,6 +107,44 @@ class FlatIntegrationTest extends BaseIntegrationTest {
 				 .andExpect(jsonPath("$.content[0].id").value(flat.getId()))
 				 .andExpect(jsonPath("$.content[0].averageRating").doesNotExist())
 				 .andExpect(jsonPath("$.content[0].reviewCount").doesNotExist());
+	}
+	
+	@Test
+	void listFlats_filterByMinRating_returnsOnlyHighRated() throws Exception {
+		User landlord = testData.createLandlord();
+		User tenant1 = testData.createTenant("r1");
+		User tenant2 = testData.createTenant("r2");
+		
+		// Flat A: avg = 9.0 (approved only)
+		Flat flatA = testData.createVerifiedFlat(landlord);
+		testData.createReviewWithRating(flatA, tenant1, ReviewStatus.APPROVED, 9);
+		testData.createReviewWithRating(flatA, tenant2, ReviewStatus.APPROVED, 9);
+		
+		// Flat B: avg = 3.0
+		Flat flatB = testData.createVerifiedFlat(landlord);
+		testData.createReviewWithRating(flatB, tenant1, ReviewStatus.APPROVED, 3);
+		testData.createReviewWithRating(flatB, tenant2, ReviewStatus.APPROVED, 3);
+		
+		mockMvc.perform(get("/flats").param("size", "200").param("minRating", "8"))
+				 .andExpect(status().isOk())
+				 .andExpect(jsonPath("$.content[*].id", hasItem(flatA.getId().intValue())))
+				 .andExpect(jsonPath("$.content[*].id", not(hasItem(flatB.getId().intValue()))));
+	}
+	
+	@Test
+	void listFlats_filterByHasReviews_returnsOnlyReviewedFlats() throws Exception {
+		User landlord = testData.createLandlord();
+		User tenant = testData.createTenant("r");
+		
+		Flat reviewed = testData.createVerifiedFlat(landlord);
+		testData.createReviewWithRating(reviewed, tenant, ReviewStatus.APPROVED, 7);
+		
+		Flat unreviewed = testData.createVerifiedFlat(landlord);
+		
+		mockMvc.perform(get("/flats").param("size", "200").param("hasReviews", "true"))
+				 .andExpect(status().isOk())
+				 .andExpect(jsonPath("$.content[*].id", hasItem(reviewed.getId().intValue())))
+				 .andExpect(jsonPath("$.content[*].id", not(hasItem(unreviewed.getId().intValue()))));
 	}
 	
 }

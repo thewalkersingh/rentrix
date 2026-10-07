@@ -31,4 +31,11 @@ public class FlatFilterRequest {
 	// Free-text search across address + description
 	private String q;
 	
+	// v0.1.2 — review-based filters
+	/** Minimum average rating (1–10). Null = no rating filter. */
+	private Integer minRating;
+	
+	/** When true, only flats with at least one APPROVED review. */
+	private Boolean hasReviews;
+	
 }
