@@ -38,7 +38,7 @@ export function ReviewCard({ review }: { review: Review }) {
           </Avatar>
           <div>
             <p className="text-sm font-medium">{review.userName}</p>
-            <p className="text-xs text-muted-foreground">{formatDate(review.reviewDate)}</p>
+            <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
           </div>
         </div>
         <Badge className={ratingColor(review.rating)}>

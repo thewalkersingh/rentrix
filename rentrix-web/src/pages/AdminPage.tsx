@@ -75,7 +75,7 @@ export default function AdminPage() {
                   {r.flatAddress ?? `Flat #${r.flatId}`}
                 </Link>
               </div>
-              <span className="text-xs text-muted-foreground">{formatDate(r.reviewDate)}</span>
+              <span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">

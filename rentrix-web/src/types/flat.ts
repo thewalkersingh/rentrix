@@ -2,10 +2,6 @@ import type { AddressDto } from "./common"
 
 export type PropertyType = "APARTMENT" | "INDEPENDENT_HOUSE" | "PG" | "ROOM" | "STUDIO" | "VILLA"
 
-/**
- * Lighter shape returned by GET /flats (list view).
- * Address fields are flattened; description/timestamps are omitted.
- */
 export interface FlatSummary {
   id: number
   rent: number
@@ -23,14 +19,15 @@ export interface FlatSummary {
   city?: string
   state?: string
 
-  // Ratings (null until v0.1.2 batch compute)
+  // v0.1.2 — visibility flags
+  verified?: boolean
+  visible?: boolean
+
+  // Ratings (populated by Step 4)
   averageRating?: number | null
   reviewCount?: number | null
 }
 
-/**
- * Full shape returned by GET /flats/{id} (detail view).
- */
 export interface Flat {
   id: number
   rent: number
@@ -50,6 +47,12 @@ export interface Flat {
 
   ownerId?: number
   ownerName?: string
+
+  // v0.1.2 — who created this flat + lifecycle flags
+  createdById?: number
+  createdByName?: string
+  verified?: boolean
+  visible?: boolean
 
   averageRating?: number | null
   reviewCount?: number | null

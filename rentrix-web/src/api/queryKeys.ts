@@ -7,6 +7,7 @@ export const queryKeys = {
   flats: {
     all: ["flats"] as const,
     list: (filters: FlatFilters) => ["flats", "list", filters] as const,
+    mine: (page = 0, size = 20) => ["flats", "mine", { page, size }] as const,
     detail: (id: number) => ["flats", "detail", id] as const,
   },
   reviews: {

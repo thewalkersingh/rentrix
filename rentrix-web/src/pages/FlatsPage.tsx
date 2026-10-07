@@ -5,10 +5,14 @@ import { FlatFilters } from "@/features/flats/components/FlatFilters"
 import { FlatPagination } from "@/features/flats/components/FlatPagination"
 import { useFiltersStore } from "@/features/flats/store"
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
+import { Plus } from "lucide-react"
+import { useAuthStore } from "@/features/auth/store"
 
 export default function FlatsPage() {
   const { data, isLoading, isError, error, refetch, isFetching, isSlow } = useFlats()
   const filters = useFiltersStore((s) => s.filters)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const flats = data?.content ?? []
 
@@ -21,9 +25,20 @@ export default function FlatsPage() {
             {data ? `${data.totalElements} flats found` : "Loading…"}
           </p>
         </div>
-        {isFetching && !isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        )}
+
+        <div className="flex items-center gap-2">
+          {isFetching && !isLoading && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+          {isAuthenticated && (
+            <Button asChild size="sm">
+              <Link to="/me/flats/new">
+                <Plus className="mr-1 h-4 w-4" />
+                Add a place
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {isSlow && (

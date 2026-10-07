@@ -5,11 +5,12 @@ export interface Review {
   userId: number
   userName: string
   flatId: number
-  flatAddress?: string // for MyReviews + admin display
+  flatAddress?: string
   title: string
   content: string
   rating: number
-  reviewDate: string
+  createdAt: string
+  updatedAt?: string
   status: ReviewStatus
 }
 

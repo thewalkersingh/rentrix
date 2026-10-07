@@ -84,7 +84,7 @@ export default function MyReviewsPage() {
                   {r.flatAddress ?? `Flat #${r.flatId}`}
                 </Link>
               </div>
-              <span className="text-xs text-muted-foreground">{formatDate(r.reviewDate)}</span>
+              <span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span>
             </CardHeader>
             <CardContent className="space-y-2">
               <h3 className="leading-tight font-semibold">{r.title}</h3>

@@ -34,7 +34,11 @@ export function RootLayout() {
                 <Link to="/me/reviews">My Reviews</Link>
               </Button>
             )}
-
+            {isAuthenticated && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/me/flats">My Flats</Link>
+              </Button>
+            )}
             {user?.role === "ADMIN" && (
               <Button asChild variant="ghost" size="sm">
                 <Link to="/admin">Admin</Link>
@@ -120,7 +124,7 @@ export function RootLayout() {
           <p className="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} {env.VITE_APP_NAME}. All rights reserved.
             <br />
-            Built with ❤️ in India by Diwakar
+            Built with ❤️ in India by DoorWayLivings
           </p>
         </div>
       </footer>

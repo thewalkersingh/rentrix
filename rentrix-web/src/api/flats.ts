@@ -6,6 +6,9 @@ export const flatsApi = {
   list: (filters: FlatFilters = {}): Promise<Page<FlatSummary>> =>
     api.get("/flats", { params: filters }).then((r) => r.data),
 
+  listMine: (page = 0, size = 20): Promise<Page<FlatSummary>> =>
+    api.get("/flats/me", { params: { page, size } }).then((r) => r.data),
+
   get: (id: number): Promise<Flat> => api.get(`/flats/${id}`).then((r) => r.data),
 
   create: (payload: CreateFlatRequest): Promise<Flat> =>

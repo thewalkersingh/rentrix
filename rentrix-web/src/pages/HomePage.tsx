@@ -4,6 +4,7 @@ import {
   Building2,
   CheckCircle2,
   MapPin,
+  Plus,
   Search,
   ShieldCheck,
   Star,
@@ -78,7 +79,7 @@ export default function HomePage() {
         {/* backdrop */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,theme(colors.primary/10),transparent_60%)]"
+          className="bg-[radial-gradient(ellipse_at_top,var(--color-primary),transparent_60%)]/[10] pointer-events-none absolute inset-0 -z-10"
         />
 
         <div className="container mx-auto flex flex-col items-center gap-8 px-4 py-24 text-center sm:py-32">
@@ -108,6 +109,9 @@ export default function HomePage() {
             </Button>
             <Button asChild size="lg" variant="outline">
               <Link to="/signup">Write your first review</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/me/flats/new">Add a place you've lived in</Link>
             </Button>
           </div>
 
@@ -193,7 +197,29 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
+      {/* ── ADD A PLACE CTA ──────────────────────────────── */}
+      <section className="container mx-auto px-4 py-16">
+        <Card className="border-primary/20 bg-linear-to-br from-primary/5 via-transparent to-transparent">
+          <CardContent className="flex flex-col items-start gap-6 p-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-bold sm:text-2xl">Lived somewhere? Add it.</h3>
+              </div>
+              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                Help the next renter. Add a flat you've lived in and share your honest review — even
+                if no landlord has listed it yet.
+              </p>
+            </div>
+            <Button asChild size="lg" className="shrink-0">
+              <Link to="/me/flats/new">
+                Add a place
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
       {/* ── TESTIMONIALS ─────────────────────────────────── */}
       <section className="container mx-auto px-4 py-20">
         <div className="mx-auto mb-12 max-w-2xl text-center">

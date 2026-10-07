@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { FlatSummary, PropertyType } from "@/types"
+import { VerifiedBadge } from "@/features/flats/components/VerifiedBadge.tsx"
 
 function formatCurrency(n: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -50,24 +51,35 @@ export function FlatCard({ flat }: { flat: FlatSummary }) {
       <CardHeader className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base leading-tight">{locationLine(flat)}</CardTitle>
-          {flat.available ? (
-            <Badge variant="default" className="shrink-0">
-              Available
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="shrink-0">
-              Occupied
-            </Badge>
-          )}
+          <div className="flex shrink-0 gap-1">
+            {flat.available ? (
+              <Badge variant="default">Available</Badge>
+            ) : (
+              <Badge variant="secondary">Occupied</Badge>
+            )}
+          </div>
         </div>
-        <CardDescription className="flex items-center gap-1 text-xs">
+
+        <CardDescription className="flex flex-wrap items-center gap-1 text-xs">
           <MapPin className="h-3 w-3" />
           {[flat.city, flat.state].filter(Boolean).join(", ") || "—"}
           <span className="mx-1">·</span>
           <span>{PROPERTY_LABEL[flat.propertyType]}</span>
+          {flat.verified && (
+            <>
+              <span className="mx-1">·</span>
+              <VerifiedBadge verified />
+            </>
+          )}
         </CardDescription>
       </CardHeader>
 
+      <CardDescription className="flex items-center gap-1 text-xs">
+        <MapPin className="h-3 w-3" />
+        {[flat.city, flat.state].filter(Boolean).join(", ") || "—"}
+        <span className="mx-1">·</span>
+        <span>{PROPERTY_LABEL[flat.propertyType]}</span>
+      </CardDescription>
       <CardContent className="flex-1 space-y-3">
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
@@ -104,7 +116,6 @@ export function FlatCard({ flat }: { flat: FlatSummary }) {
           </p>
         )}
       </CardContent>
-
       <CardFooter className="flex items-center justify-between border-t pt-4">
         <span className="text-lg font-semibold">{formatCurrency(flat.rent)}</span>
         <Button asChild size="sm">
