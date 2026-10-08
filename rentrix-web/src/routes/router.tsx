@@ -15,6 +15,8 @@ import { RouteError } from "@/routes/RouteError.tsx"
 import MyFlatsPage from "@/pages/MyFlatsPage.tsx"
 import CreateFlatPage from "@/pages/CreateFlatPage.tsx";
 import EditFlatPage from "@/pages/EditFlatPage.tsx";
+import PrivacyPage from "@/pages/PrivacyPage.tsx";
+import TermsPage from "@/pages/TermsPage.tsx";
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +29,8 @@ export const router = createBrowserRouter([
       { path: "flats/:id", element: <FlatDetailPage /> },
       { path: "login", element: <LoginPage /> },
       { path: "signup", element: <SignupPage /> },
+      { path: "privacy", element: <PrivacyPage /> },
+      { path: "terms", element: <TermsPage /> },
 
       // Authenticated routes
       {
