@@ -29,6 +29,7 @@ public interface FlatService {
 	// Admin
 	FlatResponse setVerified(Long id, boolean verified);
 	
+	// Admin
 	FlatResponse setVisible(Long id, boolean visible);
 	
 }
