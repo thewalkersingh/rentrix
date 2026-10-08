@@ -1,7 +1,9 @@
 package com.rentrix.rentrixserver.service.impl;
 
-import com.rentrix.rentrixserver.dto.CreateReviewRequest;
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
+import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.User;
@@ -14,10 +16,13 @@ import com.rentrix.rentrixserver.repository.UserRepository;
 import com.rentrix.rentrixserver.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -29,8 +34,24 @@ public class ReviewServiceImpl implements ReviewService {
 	private final UserRepository userRepository;
 	
 	@Override
-	public Page<ReviewDto> getAllReviews(Pageable pageable) {
-		return reviewRepository.findAll(pageable).map(ReviewMapper::toDto);
+	public PageResponse<ReviewDto> getAllReviews(Pageable pageable) {
+		return PageResponse.from(reviewRepository.findAll(pageable), ReviewMapper::toDto);
+	}
+	
+	@Override
+	public PageResponse<ReviewDto> getReviewsByFlat(Long flatId, Pageable pageable) {
+		return PageResponse.from(
+			reviewRepository.findByFlatIdAndStatus(flatId, ReviewStatus.APPROVED, pageable),
+			ReviewMapper::toDto
+		);
+	}
+	
+	@Override
+	public PageResponse<ReviewDto> getMyReviews(Long userId, Pageable pageable) {
+		return PageResponse.from(
+			reviewRepository.findByUserId(userId, pageable),
+			ReviewMapper::toDto
+		);
 	}
 	
 	@Override
@@ -38,13 +59,6 @@ public class ReviewServiceImpl implements ReviewService {
 		Review review = reviewRepository.findById(id)
 												  .orElseThrow(() -> ApiException.notFound("Review not found with id: " + id));
 		return ReviewMapper.toDto(review);
-	}
-	
-	@Override
-	public Page<ReviewDto> getReviewsByFlat(Long flatId, Pageable pageable) {
-		return reviewRepository
-					 .findByFlatIdAndStatus(flatId, ReviewStatus.APPROVED, pageable)
-					 .map(ReviewMapper::toDto);
 	}
 	
 	@Override
@@ -71,11 +85,6 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 	
 	@Override
-	public Page<ReviewDto> getMyReviews(Long userId, Pageable pageable) {
-		return reviewRepository.findByUserId(userId, pageable).map(ReviewMapper::toDto);
-	}
-	
-	@Override
 	@Transactional
 	public String deleteReview(Long id) {
 		if (!reviewRepository.existsById(id)) {
@@ -83,6 +92,24 @@ public class ReviewServiceImpl implements ReviewService {
 		}
 		reviewRepository.deleteById(id);
 		return "Review with id: " + id + " has been deleted";
+	}
+	
+	@Override
+	public Map<Long, RatingAggregate> getRatingAggregates(List<Long> flatIds) {
+		if (flatIds == null || flatIds.isEmpty()) {
+			return Map.of();
+		}
+		
+		List<Object[]> rows = reviewRepository.findRatingAggregates(flatIds);
+		
+		Map<Long, RatingAggregate> result = new HashMap<>();
+		for (Object[] row : rows) {
+			Long flatId = ((Number) row[0]).longValue();
+			Double avg = row[1] != null ? ((Number) row[1]).doubleValue() : null;
+			Long count = row[2] != null ? ((Number) row[2]).longValue() : 0L;
+			result.put(flatId, new RatingAggregate(avg, count));
+		}
+		return result;
 	}
 	
 }

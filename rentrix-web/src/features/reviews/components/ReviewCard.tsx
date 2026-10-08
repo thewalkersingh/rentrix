@@ -4,14 +4,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import type { Review } from "@/types"
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
+function initials(name: string | null | undefined) {
+   if (!name) return '?'
+   return name
+       .split(' ')
+       .map((p) => p[0])
+       .filter(Boolean)
+       .slice(0, 2)
+       .join('')
+       .toUpperCase() || '?'
 }
 
 function ratingColor(rating: number) {
@@ -38,7 +39,7 @@ export function ReviewCard({ review }: { review: Review }) {
           </Avatar>
           <div>
             <p className="text-sm font-medium">{review.userName}</p>
-            <p className="text-xs text-muted-foreground">{formatDate(review.reviewDate)}</p>
+            <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
           </div>
         </div>
         <Badge className={ratingColor(review.rating)}>

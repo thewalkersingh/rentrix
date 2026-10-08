@@ -1,0 +1,489 @@
+{
+	"id": "c856f1b1-c362-42fc-82b1-c8483a22b538",
+	"name": "Rentrix v0.1.2",
+	"timestamp": "2026-10-02T12:26:51.609Z",
+	"collection_id": "18274153-e11c0109-6e8a-41a6-8822-a87c1cf40c6f",
+	"folder_id": 0,
+	"environment_id": "18274153-c0b410e6-8aa0-495a-8f66-744cc62cbdbb",
+	"totalPass": 4,
+	"delay": 0,
+	"persist": true,
+	"status": "error",
+	"startedAt": "2026-10-02T12:26:49.172Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "68efac1e-2dbf-466d-8e26-64ab4c1ab040",
+			"name": "Health check",
+			"url": "http://localhost:8080/api/v1/actuator/health",
+			"time": 9,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				9
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "a30141f8-bdb0-41f4-b25d-f2feee75b1ea",
+			"name": "Signup — TENANT",
+			"url": "http://localhost:8080/api/v1/auth/signup",
+			"time": 90,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				90
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "fc27347d-3c00-4ae9-a6eb-683e2a8b1899",
+			"name": "Signup — LANDLORD",
+			"url": "http://localhost:8080/api/v1/auth/signup",
+			"time": 87,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				87
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "ecccd62c-dca1-4c1d-920b-7aeae550537a",
+			"name": "Signup — block ADMIN self-register",
+			"url": "http://localhost:8080/api/v1/auth/signup",
+			"time": 10,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				10
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "7ac6627a-89e9-41d4-afed-1b4b8d475165",
+			"name": "Login — tenant",
+			"url": "http://localhost:8080/api/v1/auth/login",
+			"time": 84,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				84
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "c71e8528-eeee-4611-8b32-e71bb359db45",
+			"name": "Login — landlord",
+			"url": "http://localhost:8080/api/v1/auth/login",
+			"time": 80,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				80
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "34019e58-6315-4993-9c4b-7aed2b5d1f14",
+			"name": "Login — admin",
+			"url": "http://localhost:8080/api/v1/auth/login",
+			"time": 9,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				9
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "4a00af75-1b34-4546-b24e-1a6aea17a492",
+			"name": "Me",
+			"url": "http://localhost:8080/api/v1/auth/me",
+			"time": 18,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				18
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "8dbfe177-3219-4191-ba55-724b70245a44",
+			"name": "Refresh",
+			"url": "http://localhost:8080/api/v1/auth/refresh",
+			"time": 11,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				11
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "1558b838-b55c-42fd-b159-34c66f69dd0f",
+			"name": "List flats (default)",
+			"url": "http://localhost:8080/api/v1/flats?page=0&size=9",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				5
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "28f2ac16-3ae5-4a29-856f-f5fde490e4e4",
+			"name": "List flats — filter by city",
+			"url": "http://localhost:8080/api/v1/flats?city=Pune&page=0&size=20",
+			"time": 6,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				6
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "8ac2bd0e-d023-4af6-8f81-df744aae9199",
+			"name": "List flats — rent range",
+			"url": "http://localhost:8080/api/v1/flats?minRent=10000&maxRent=25000",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				5
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "6aa0268c-f240-4607-a9f3-3e8b6f1ff544",
+			"name": "List flats — propertyType",
+			"url": "http://localhost:8080/api/v1/flats?propertyType=APARTMENT",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				5
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "55c19c2b-a694-40cd-91cc-64a9d1269ee6",
+			"name": "List flats — furnished + parking",
+			"url": "http://localhost:8080/api/v1/flats?furnished=true&parking=true",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				5
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "78ec46c9-0480-49c1-a7d4-81c34bed8bca",
+			"name": "List flats — sorted desc by rent",
+			"url": "http://localhost:8080/api/v1/flats?sort=rent,desc",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				5
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "22640d97-24f1-4aed-9944-68104f772d11",
+			"name": "Get flat by id (set flatId first)",
+			"url": "http://localhost:8080/api/v1/flats/",
+			"time": 8,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				8
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "6431bcc6-a23e-4df9-8107-53ae8a818119",
+			"name": "Get non-existent flat — expect 404",
+			"url": "http://localhost:8080/api/v1/flats/999999",
+			"time": 9,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				9
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "8d0edd3f-8c07-4829-9f62-7a05aa4e5edc",
+			"name": "Create flat as TENANT (should be verified=false, visible=false)",
+			"url": "http://localhost:8080/api/v1/flats",
+			"time": 26,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"verified is false": true,
+				"visible is false": true,
+				"ownerId is null (tenant)": true,
+				"createdByName present": true
+			},
+			"testPassFailCounts": {
+				"verified is false": {
+					"pass": 1,
+					"fail": 0
+				},
+				"visible is false": {
+					"pass": 1,
+					"fail": 0
+				},
+				"ownerId is null (tenant)": {
+					"pass": 1,
+					"fail": 0
+				},
+				"createdByName present": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				26
+			],
+			"allTests": [
+				{
+					"verified is false": true,
+					"visible is false": true,
+					"ownerId is null (tenant)": true,
+					"createdByName present": true
+				}
+			]
+		},
+		{
+			"id": "8f88d7df-50d2-47ce-b3fc-957fe02e0ef9",
+			"name": "My flats (as tenant) — should include tenantFlatId",
+			"url": "http://localhost:8080/api/v1/flats/me",
+			"time": 17,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				17
+			],
+			"allTests": [
+				{}
+			]
+		},
+		{
+			"id": "fd67a9d1-2d9e-4054-8b99-8c9ac2195ee1",
+			"name": "Public list — should NOT include tenantFlatId",
+			"url": "http://localhost:8080/api/v1/flats?size=200",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {},
+			"testPassFailCounts": {},
+			"times": [
+				5
+			],
+			"allTests": [
+				{}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 494,
+	"collection": {
+		"requests": [
+			{
+				"id": "68efac1e-2dbf-466d-8e26-64ab4c1ab040",
+				"method": "GET"
+			},
+			{
+				"id": "a30141f8-bdb0-41f4-b25d-f2feee75b1ea",
+				"method": "POST"
+			},
+			{
+				"id": "fc27347d-3c00-4ae9-a6eb-683e2a8b1899",
+				"method": "POST"
+			},
+			{
+				"id": "ecccd62c-dca1-4c1d-920b-7aeae550537a",
+				"method": "POST"
+			},
+			{
+				"id": "7ac6627a-89e9-41d4-afed-1b4b8d475165",
+				"method": "POST"
+			},
+			{
+				"id": "c71e8528-eeee-4611-8b32-e71bb359db45",
+				"method": "POST"
+			},
+			{
+				"id": "34019e58-6315-4993-9c4b-7aed2b5d1f14",
+				"method": "POST"
+			},
+			{
+				"id": "4a00af75-1b34-4546-b24e-1a6aea17a492",
+				"method": "GET"
+			},
+			{
+				"id": "8dbfe177-3219-4191-ba55-724b70245a44",
+				"method": "POST"
+			},
+			{
+				"id": "1558b838-b55c-42fd-b159-34c66f69dd0f",
+				"method": "GET"
+			},
+			{
+				"id": "28f2ac16-3ae5-4a29-856f-f5fde490e4e4",
+				"method": "GET"
+			},
+			{
+				"id": "8ac2bd0e-d023-4af6-8f81-df744aae9199",
+				"method": "GET"
+			},
+			{
+				"id": "6aa0268c-f240-4607-a9f3-3e8b6f1ff544",
+				"method": "GET"
+			},
+			{
+				"id": "55c19c2b-a694-40cd-91cc-64a9d1269ee6",
+				"method": "GET"
+			},
+			{
+				"id": "78ec46c9-0480-49c1-a7d4-81c34bed8bca",
+				"method": "GET"
+			},
+			{
+				"id": "22640d97-24f1-4aed-9944-68104f772d11",
+				"method": "GET"
+			},
+			{
+				"id": "6431bcc6-a23e-4df9-8107-53ae8a818119",
+				"method": "GET"
+			},
+			{
+				"id": "8d0edd3f-8c07-4829-9f62-7a05aa4e5edc",
+				"method": "POST"
+			},
+			{
+				"id": "8f88d7df-50d2-47ce-b3fc-957fe02e0ef9",
+				"method": "GET"
+			},
+			{
+				"id": "fd67a9d1-2d9e-4054-8b99-8c9ac2195ee1",
+				"method": "GET"
+			}
+		]
+	}
+}

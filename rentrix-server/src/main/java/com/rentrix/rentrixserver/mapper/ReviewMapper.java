@@ -1,14 +1,16 @@
 package com.rentrix.rentrixserver.mapper;
 
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.entity.Review;
 
 public final class ReviewMapper {
+	
 	private ReviewMapper() {}
 	
 	public static ReviewDto toDto(Review review) {
 		if (review == null) return null;
 		ReviewDto dto = new ReviewDto();
+		
 		dto.setId(review.getId());
 		dto.setTitle(review.getTitle());
 		dto.setContent(review.getContent());
@@ -17,10 +19,15 @@ public final class ReviewMapper {
 		
 		if (review.getUser() != null) {
 			dto.setUserId(review.getUser().getId());
+			dto.setUserName(review.getUser().getDisplayName());
 		}
 		if (review.getFlat() != null) {
 			dto.setFlatId(review.getFlat().getId());
+			dto.setFlatAddress(review.getFlat().getAddress() != null
+										 ? review.getFlat().getAddress().getAddressLine()
+										 : null);
 		}
+		
 		return dto;
 	}
 	

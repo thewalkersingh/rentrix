@@ -1,63 +1,87 @@
-import { Link, Outlet } from "react-router-dom"
+import { Link, NavLink, Outlet } from "react-router-dom"
 import { Toaster } from "@/components/ui/sonner"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/features/auth/store"
 import { useAuthBootstrap } from "@/features/auth/hooks/useAuthBootstrap"
 import { env } from "@/lib/env"
-import { useLogout } from "@/features/auth/hooks/useLogout.ts"
 import { useMe } from "@/features/auth/hooks/useMe.ts"
-import { ThemeToggle } from "@/components/common/ThemeToggle.tsx"
+import { Home, Plus } from "lucide-react"
+import { cn } from "cn"
+import { UserMenu } from "@/components/layout/UserMenu.tsx"
+import {ThemeToggle} from "@/components/common/ThemeToggle.tsx";
+import {MobileNav} from "@/components/layout/MobileNav.tsx";
 
 export function RootLayout() {
+  const { isAuthenticated } = useAuthStore()
   useAuthBootstrap()
-  // const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuthStore()
-
-  const logout = useLogout()
   useMe()
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <Link to="/" className="text-lg font-semibold">
-            {env.VITE_APP_NAME}
+          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <Home className="h-4 w-4" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight">{env.VITE_APP_NAME}</span>
           </Link>
 
           <nav className="flex items-center gap-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/flats">Flats</Link>
-            </Button>
+            {/* Desktop-only nav */}
+            <NavLink
+              to="/flats"
+              className={({ isActive }) =>
+                cn(
+                  "hidden rounded-md px-3 py-1.5 text-sm font-medium transition-colors md:inline-flex",
+                  isActive
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )
+              }
+            >
+              Flats
+            </NavLink>
 
+            {/* Add place — desktop */}
             {isAuthenticated && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/me/reviews">My Reviews</Link>
+              <Button asChild size="sm" className="hidden md:inline-flex">
+                <Link to="/me/flats/new">
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add place
+                </Link>
               </Button>
             )}
 
-            {user?.role === "ADMIN" && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/admin">Admin</Link>
+            {/* Add place — mobile icon-only */}
+            {isAuthenticated && (
+              <Button asChild size="icon" className="md:hidden" aria-label="Add place">
+                <Link to="/me/flats/new">
+                  <Plus className="h-4 w-4" />
+                </Link>
               </Button>
             )}
+
             <ThemeToggle />
-            {isAuthenticated ? (
-              <>
-                <span className="text-sm text-muted-foreground">{user?.name}</span>
-                <Button variant="outline" size="sm" onClick={() => logout.mutate()}>
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/login">Login</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/signup">Sign up</Link>
-                </Button>
-              </>
-            )}
+
+            {/* User menu — desktop only */}
+            <div className="hidden md:flex md:items-center md:gap-2">
+              {isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm">
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/signup">Sign up</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile hamburger */}
+            <MobileNav />
           </nav>
         </div>
       </header>
@@ -119,6 +143,8 @@ export function RootLayout() {
         <div className="border-t">
           <p className="container mx-auto px-4 py-4 text-center text-xs text-muted-foreground">
             © {new Date().getFullYear()} {env.VITE_APP_NAME}. All rights reserved.
+            <br />
+            Built with ❤️ in India by DoorWayLivings
           </p>
         </div>
       </footer>

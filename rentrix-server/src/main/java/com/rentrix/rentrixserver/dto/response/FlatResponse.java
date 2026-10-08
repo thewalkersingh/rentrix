@@ -34,15 +34,18 @@ public class FlatResponse {
 	
 	private AddressDto address;
 	
-	// Owner summary — never the full User entity
 	private Long ownerId;
 	private String ownerName;
 	
-	// Ratings (computed on the fly)
+	private Long createdById;
+	private String createdByName;
+	
+	private Boolean verified;
+	private Boolean visible;
+	
 	private Double averageRating;
 	private Long reviewCount;
 	
-	// Timestamps
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	

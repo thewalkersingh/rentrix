@@ -1,4 +1,4 @@
-package com.rentrix.rentrixserver.dto;
+package com.rentrix.rentrixserver.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;

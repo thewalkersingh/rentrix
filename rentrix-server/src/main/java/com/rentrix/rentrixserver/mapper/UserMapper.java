@@ -1,6 +1,6 @@
 package com.rentrix.rentrixserver.mapper;
 
-import com.rentrix.rentrixserver.dto.UserDto;
+import com.rentrix.rentrixserver.dto.response.UserDto;
 import com.rentrix.rentrixserver.entity.User;
 import com.rentrix.rentrixserver.entity.constants.Role;
 

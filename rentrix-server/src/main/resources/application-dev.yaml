@@ -23,7 +23,7 @@ Spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update                     # Use 'validate' in production
+      ddl-auto: update                      # Use 'validate' in production
     show-sql: true
     properties:
       hibernate:

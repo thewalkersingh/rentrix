@@ -1,0 +1,15 @@
+baseUrl	http://localhost:8080/api/v1
+tenantEmail	tenant@rentrix.com
+tenantPassword	admin@1234
+landlordEmail	landlord@rentrix.com
+landlordPassword	admin@1234
+adminEmail	admin@rentrix.com
+adminPassword	admin@1234
+accessToken	(empty — set by script)
+landlordToken	(empty)
+adminToken	(empty)
+refreshToken	(empty)
+flatId	1
+tenantFlatId	(empty)
+landlordFlatId	(empty)
+pendingReviewId	(empty)

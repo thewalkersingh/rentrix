@@ -66,13 +66,17 @@ public class SecurityConfig {
 								.requestMatchers("/auth/signup", "/auth/login", "/auth/refresh").permitAll()
 								
 								// Public: browse flats + read reviews
-								.requestMatchers(HttpMethod.GET, "/flats/**").permitAll()
-								.requestMatchers(HttpMethod.GET, "/reviews").permitAll()
+								.requestMatchers(HttpMethod.GET, "/flats/me").authenticated()     // ← first
+								.requestMatchers(HttpMethod.GET, "/flats/*/reviews").permitAll()
+								.requestMatchers(HttpMethod.GET, "/flats/*").permitAll()
+								.requestMatchers(HttpMethod.GET, "/flats").permitAll()
 								
 								// Public: docs + H2 console (dev only — remove before prod!)
 								.requestMatchers("/v3/api-docs/**",
 									"/swagger-ui/**",
 									"/swagger-ui.html",
+									"/swagger-resources/**",
+									"/webjars/**",
 									"/h2-console/**").permitAll()
 								.requestMatchers("/actuator/health").permitAll()
 								
@@ -97,9 +101,10 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://myrentrix.vercel.app",
-			"https://*.vercel.app"          // ← covers every preview URL
-		));
+		config.setAllowedOriginPatterns(
+			List.of("http://localhost:5173", "https://myrentrix.vercel.app",
+				"https://*.vercel.app"          // ← covers every preview URL
+			));
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
 		config.setAllowCredentials(true);

@@ -1,4 +1,4 @@
-package com.rentrix.rentrixserver.dto;
+package com.rentrix.rentrixserver.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
+	
 	private UserDto user;
 	private String accessToken;
 	private String refreshToken;

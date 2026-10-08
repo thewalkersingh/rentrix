@@ -1,13 +1,14 @@
 package com.rentrix.rentrixserver.controller;
 
-import com.rentrix.rentrixserver.dto.CreateReviewRequest;
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,10 +26,11 @@ public class ReviewController {
 	 * Returns Spring's Page JSON (content, totalElements, totalPages, number, size).
 	 */
 	@GetMapping
-	public Page<ReviewDto> getFlatReviews(@PathVariable Long flatId,
-		@PageableDefault(size = 10, sort = "reviewDate") Pageable pageable) {
+	public PageResponse<ReviewDto> getFlatReviews(@PathVariable Long flatId,
+		@PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 		
 		return reviewService.getReviewsByFlat(flatId, pageable);
+		
 	}
 	
 	/**

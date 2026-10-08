@@ -1,6 +1,10 @@
 package com.rentrix.rentrixserver.controller;
 
-import com.rentrix.rentrixserver.dto.*;
+import com.rentrix.rentrixserver.dto.request.LoginRequest;
+import com.rentrix.rentrixserver.dto.request.RefreshRequest;
+import com.rentrix.rentrixserver.dto.request.SignupRequest;
+import com.rentrix.rentrixserver.dto.response.AuthResponse;
+import com.rentrix.rentrixserver.dto.response.UserDto;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.AuthService;
 import jakarta.validation.Valid;
@@ -47,6 +51,7 @@ public class AuthController {
 	}
 	
 	public record RefreshResponse(String accessToken) {
+	
 	}
 	/*
 	Note: RefreshResponse is a nested record — small, single-use, fine here. If you prefer a separate file, create

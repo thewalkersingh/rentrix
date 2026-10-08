@@ -5,11 +5,15 @@ import { FlatFilters } from "@/features/flats/components/FlatFilters"
 import { FlatPagination } from "@/features/flats/components/FlatPagination"
 import { useFiltersStore } from "@/features/flats/store"
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
+import { Plus } from "lucide-react"
+import { useAuthStore } from "@/features/auth/store"
 
 export default function FlatsPage() {
   const { data, isLoading, isError, error, refetch, isFetching, isSlow } = useFlats()
   const filters = useFiltersStore((s) => s.filters)
-
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const resetFilters = useFiltersStore((s) => s.resetFilters)
   const flats = data?.content ?? []
 
   return (
@@ -21,9 +25,20 @@ export default function FlatsPage() {
             {data ? `${data.totalElements} flats found` : "Loading…"}
           </p>
         </div>
-        {isFetching && !isLoading && (
-          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-        )}
+
+        <div className="flex items-center gap-2">
+          {isFetching && !isLoading && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+          {isAuthenticated && (
+            <Button asChild size="sm">
+              <Link to="/me/flats/new">
+                <Plus className="mr-1 h-4 w-4" />
+                Add a place
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {isSlow && (
@@ -61,8 +76,11 @@ export default function FlatsPage() {
           )}
 
           {!isLoading && !isError && flats.length === 0 && (
-            <div className="rounded-lg border py-16 text-center text-muted-foreground">
-              No flats match your filters.
+            <div className="rounded-lg border py-16 text-center">
+              <p className="text-muted-foreground">No flats match your filters.</p>
+              <Button variant="outline" size="sm" className="mt-4" onClick={resetFilters}>
+                Clear filters
+              </Button>
             </div>
           )}
 

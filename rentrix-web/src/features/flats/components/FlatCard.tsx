@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { VerifiedBadge } from "./VerifiedBadge"
 import type { FlatSummary, PropertyType } from "@/types"
 
 function formatCurrency(n: number) {
@@ -46,12 +47,21 @@ export function FlatCard({ flat }: { flat: FlatSummary }) {
   const availableFrom = formatDate(flat.availableFrom)
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
+    <Card className="group relative flex h-full cursor-pointer flex-col overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md">
+      {/* Stretched link — full card clickable, keyboard accessible */}
+      <Link
+        to={`/flats/${flat.id}`}
+        className="absolute inset-0 z-0"
+        aria-label={`View ${locationLine(flat)}`}
+      />
+
       <CardHeader className="space-y-1">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-base leading-tight">{locationLine(flat)}</CardTitle>
+          <CardTitle className="text-base leading-tight transition-colors group-hover:text-primary">
+            {locationLine(flat)}
+          </CardTitle>
           {flat.available ? (
-            <Badge variant="default" className="shrink-0">
+            <Badge variant="success" className="shrink-0">
               Available
             </Badge>
           ) : (
@@ -60,11 +70,18 @@ export function FlatCard({ flat }: { flat: FlatSummary }) {
             </Badge>
           )}
         </div>
-        <CardDescription className="flex items-center gap-1 text-xs">
+
+        <CardDescription className="flex flex-wrap items-center gap-1 text-xs">
           <MapPin className="h-3 w-3" />
           {[flat.city, flat.state].filter(Boolean).join(", ") || "—"}
           <span className="mx-1">·</span>
           <span>{PROPERTY_LABEL[flat.propertyType]}</span>
+          {flat.verified && (
+            <>
+              <span className="mx-1">·</span>
+              <VerifiedBadge verified />
+            </>
+          )}
         </CardDescription>
       </CardHeader>
 
@@ -106,8 +123,8 @@ export function FlatCard({ flat }: { flat: FlatSummary }) {
       </CardContent>
 
       <CardFooter className="flex items-center justify-between border-t pt-4">
-        <span className="text-lg font-semibold">{formatCurrency(flat.rent)}</span>
-        <Button asChild size="sm">
+        <span className="relative z-10 text-lg font-semibold">{formatCurrency(flat.rent)}</span>
+        <Button asChild size="sm" className="relative z-10">
           <Link to={`/flats/${flat.id}`}>View details</Link>
         </Button>
       </CardFooter>

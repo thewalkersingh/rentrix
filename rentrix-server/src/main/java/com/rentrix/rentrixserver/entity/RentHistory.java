@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "rent_history")
 public class RentHistory extends BaseEntity {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -31,3 +32,14 @@ public class RentHistory extends BaseEntity {
 	private LocalDate rentEndDate;
 	
 }
+/*
+One Strong Recommendation
+In RentHistory:
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "landlord_id")
+private User landlord;
+Since every flat already has an owner: private User owner;
+inside Flat, landlord becomes somewhat redundant.
+For v0.1.2 keep it, but later you could simply derive landlord from:
+rentHistory.getFlat().getOwner();
+ */

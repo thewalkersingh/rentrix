@@ -16,6 +16,7 @@ import java.time.LocalDate;
 public class FlatSummaryResponse {
 	
 	private Long id;
+	
 	private BigDecimal rent;
 	private Integer numberOfRooms;
 	private BigDecimal area;
@@ -26,12 +27,16 @@ public class FlatSummaryResponse {
 	private PropertyType propertyType;
 	private Boolean available;
 	
-	// Just city + state for the card
+	// Flattened address fields (no nested AddressDto for list views)
+	private String addressLine;
 	private String city;
 	private String state;
-	private String addressLine;
 	
-	// Rating summary
+	// v0.1.2 — lifecycle flags
+	private Boolean verified;
+	private Boolean visible;
+	
+	// Ratings — populated via batch aggregate
 	private Double averageRating;
 	private Long reviewCount;
 	

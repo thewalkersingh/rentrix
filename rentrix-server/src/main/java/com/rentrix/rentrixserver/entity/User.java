@@ -31,7 +31,7 @@ public class User extends BaseEntity implements UserDetails {
 	@Enumerated(EnumType.STRING)
 	private Role role;
 	
-	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
 	@EqualsAndHashCode.Exclude
 	@ToString.Exclude
 	private UserDetail userDetail;
@@ -44,7 +44,7 @@ public class User extends BaseEntity implements UserDetails {
 	
 	@Override
 	public String getUsername() {
-		return email; // login via email
+		return email;
 	}
 	
 	@Column(nullable = false)
@@ -64,7 +64,7 @@ public class User extends BaseEntity implements UserDetails {
 		return !Boolean.TRUE.equals(deleted);
 	}
 	
-	// ── Display helpers ───────────────────────────────────────────────────
+	// ── Display Username helpers methods ───────────────────────────────────────────────────
 	
 	/**
 	 * Best-effort display name for UI. Falls back to email if no user detail.

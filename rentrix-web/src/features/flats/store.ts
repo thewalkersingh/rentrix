@@ -27,7 +27,7 @@ export const useFiltersStore = create<FiltersState>((set) => ({
       },
     })),
 
-  setFilters: (patch) => set((state) => ({ filters: { ...state.filters, ...patch } })),
+  setFilters: (patch) => set((state) => ({ filters: { ...state.filters, ...patch,page:0 } })),
 
   resetFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
 }))

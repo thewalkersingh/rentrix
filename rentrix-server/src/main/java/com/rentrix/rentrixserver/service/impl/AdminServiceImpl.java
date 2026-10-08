@@ -1,15 +1,17 @@
 package com.rentrix.rentrixserver.service.impl;
 
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
+import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import com.rentrix.rentrixserver.exception.ApiException;
 import com.rentrix.rentrixserver.mapper.ReviewMapper;
+import com.rentrix.rentrixserver.repository.FlatRepository;
 import com.rentrix.rentrixserver.repository.ReviewRepository;
 import com.rentrix.rentrixserver.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminServiceImpl implements AdminService {
 	
 	private final ReviewRepository reviewRepository;
+	private final FlatRepository flatRepository;
 	
 	@Override
-	public Page<ReviewDto> getReviewsByStatus(ReviewStatus status, Pageable pageable) {
-		return reviewRepository.findByStatus(status, pageable).map(ReviewMapper::toDto);
+	public PageResponse<ReviewDto> getReviewsByStatus(ReviewStatus status, Pageable pageable) {
+		return PageResponse.from(reviewRepository.findByStatus(status, pageable), (ReviewMapper::toDto));
 	}
 	
 	@Override
@@ -33,11 +36,19 @@ public class AdminServiceImpl implements AdminService {
 			throw ApiException.badRequest("Cannot set status back to PENDING");
 		}
 		
-		Review review = reviewRepository.findById(reviewId)
-												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not " +
+																																	  "found"));
 		
 		review.setStatus(status);
 		Review saved = reviewRepository.save(review);
+		
+		// If a review is approved and the flat is not yet visible, make it visible
+		if (status == ReviewStatus.APPROVED && !review.getFlat().getVisible()) {
+			Flat flat = review.getFlat();
+			flat.setVisible(true);
+			flatRepository.save(flat);
+			log.info("Flat {} promoted to visible after first approved review", flat.getId());
+		}
 		
 		log.info("Moderated review {} → {}", reviewId, status);
 		return ReviewMapper.toDto(saved);
