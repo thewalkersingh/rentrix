@@ -18,13 +18,15 @@ export function useFlats() {
   })
 
   useEffect(() => {
-    if (!query.isFetching) {
-      setIsSlow(false)
-      return
-    }
+    if (!query.isFetching) return
+
     const t = setTimeout(() => setIsSlow(true), 5000)
-    return () => clearTimeout(t)
+    return () => {
+      clearTimeout(t)
+      setIsSlow(false) // ← cleanup handles the reset
+    }
   }, [query.isFetching])
 
-  return { ...query, isSlow }
+  // Only surface isSlow while actually fetching
+  return { ...query, isSlow: isSlow && query.isFetching }
 }
