@@ -22,7 +22,7 @@ jobs:
 
       - name: Run tests
         working-directory: rentrix-server
-        run: ./mvnw test
+        run: mvn test
 
       - name: Upload surefire reports on failure
         if: failure()
