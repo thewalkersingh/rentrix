@@ -7,12 +7,11 @@ import { env } from "@/lib/env"
 import { useLogout } from "@/features/auth/hooks/useLogout.ts"
 import { useMe } from "@/features/auth/hooks/useMe.ts"
 import { ThemeToggle } from "@/components/common/ThemeToggle.tsx"
-import { House, Plus } from "lucide-react"
+import { Home, Plus } from "lucide-react"
 import { cn } from "cn"
 
 export function RootLayout() {
   useAuthBootstrap()
-  // const navigate = useNavigate()
   const { isAuthenticated, user } = useAuthStore()
 
   const logout = useLogout()
@@ -22,9 +21,9 @@ export function RootLayout() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <House className="h-4 w-4" />
+              <Home className="h-4 w-4" />
             </div>
             <span className="text-lg font-semibold tracking-tight">{env.VITE_APP_NAME}</span>
           </Link>
