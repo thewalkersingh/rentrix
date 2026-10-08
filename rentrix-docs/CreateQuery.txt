@@ -11,17 +11,29 @@ CREATE TABLE flats (
 );
 
 CREATE TABLE users (
-	id BIGSERIAL PRIMARY KEY,
-	username VARCHAR(255) UNIQUE,
-	telephone VARCHAR(20) UNIQUE,
-	password VARCHAR(255) NOT NULL,
-	name VARCHAR(255) NOT NULL,
-	address VARCHAR(500),
-	email VARCHAR(255) NOT NULL UNIQUE,
-	date_of_birth DATE,
-	role VARCHAR(20) NOT NULL
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE user_details (
+    id BIGINT PRIMARY KEY,
+    telephone VARCHAR(20) UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    address VARCHAR(255),
+    street VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    zip VARCHAR(20),
+    date_of_birth DATE,
+    CONSTRAINT fk_user_details_user
+        FOREIGN KEY (id)
+        REFERENCES users(id)
+        ON DELETE CASCADE
+);
 CREATE TABLE reviews (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
@@ -52,20 +64,17 @@ CREATE TYPE role AS ENUM (
     'ADMIN'
 );
 
-CREATE INDEX idx_review_user
-ON reviews(user_id);
+CREATE UNIQUE INDEX idx_users_email
+ON users(email);
+ 
+CREATE UNIQUE INDEX idx_users_username
+ON users(username);
+ 
+CREATE INDEX idx_users_role
+ON users(role);
 
-CREATE INDEX idx_review_flat
-ON reviews(flat_id);
+CREATE UNIQUE INDEX idx_user_details_phone
+ON user_details(telephone);
 
-CREATE INDEX idx_review_status
-ON reviews(status);
-
-CREATE INDEX idx_flat_city
-ON flats(city);
-
-CREATE INDEX idx_flat_rent
-ON flats(rent);
-
-CREATE INDEX idx_flat_available
-ON flats(is_available);
+CREATE INDEX idx_user_details_city
+ON user_details(city);

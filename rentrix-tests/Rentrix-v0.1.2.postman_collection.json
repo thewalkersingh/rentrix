@@ -1,0 +1,734 @@
+{
+  "info": {
+    "name": "Rentrix v0.1.2 (existing users)",
+    "description": "Tests using the existing users in the rentrix_db database. No signup — only login and flat/review flows.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 — Health",
+      "item": [
+        {
+          "name": "Health check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/actuator/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 — Auth (login only)",
+      "item": [
+        {
+          "name": "Login — tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('accessToken', data.accessToken);",
+                  "  pm.environment.set('refreshToken', data.refreshToken);",
+                  "  pm.test('role is TENANT', () => pm.expect(data.user.role).to.eql('TENANT'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{tenantEmail}}\",\n  \"password\": \"{{tenantPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login — landlord",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('landlordToken', data.accessToken);",
+                  "  pm.test('role is LANDLORD', () => pm.expect(data.user.role).to.eql('LANDLORD'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{landlordEmail}}\",\n  \"password\": \"{{landlordPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Login — admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('adminToken', data.accessToken);",
+                  "  pm.test('role is ADMIN', () => pm.expect(data.user.role).to.eql('ADMIN'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Me (as tenant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('email matches', () => pm.expect(data.email).to.eql(pm.environment.get('tenantEmail')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('has accessToken', () => pm.expect(pm.response.json()).to.have.property('accessToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 — Flats: Public",
+      "item": [
+        {
+          "name": "List flats (default)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('has content array', () => pm.expect(data.content).to.be.an('array'));",
+                  "pm.test('has totalElements', () => pm.expect(data.totalElements).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?page=0&size=9"
+          }
+        },
+        {
+          "name": "List flats — filter by city=Pune",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?city=Pune&page=0&size=20"
+          }
+        },
+        {
+          "name": "List flats — rent range",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?minRent=10000&maxRent=25000"
+          }
+        },
+        {
+          "name": "List flats — propertyType=APARTMENT",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?propertyType=APARTMENT"
+          }
+        },
+        {
+          "name": "List flats — furnished + parking",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?furnished=true&parking=true"
+          }
+        },
+        {
+          "name": "List flats — sorted desc by rent",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?sort=rent,desc"
+          }
+        },
+        {
+          "name": "Get flat by id=1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('has id', () => pm.expect(data.id).to.eql(1));",
+                  "pm.test('has verified field', () => pm.expect(data).to.have.property('verified'));",
+                  "pm.test('has visible field', () => pm.expect(data).to.have.property('visible'));",
+                  "pm.test('has address object', () => pm.expect(data.address).to.be.an('object'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats/1"
+          }
+        },
+        {
+          "name": "Get non-existent flat — expect 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats/999999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Flats: Tenant-created (v0.1.2)",
+      "item": [
+        {
+          "name": "Create flat as TENANT — expect verified=false, visible=false",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('tenantFlatId', data.id);",
+                  "  pm.test('verified is false', () => pm.expect(data.verified).to.eql(false));",
+                  "  pm.test('visible is false', () => pm.expect(data.visible).to.eql(false));",
+                  "  pm.test('ownerId is null', () => pm.expect(data.ownerId).to.be.null);",
+                  "  pm.test('createdByName present', () => pm.expect(data.createdByName).to.be.a('string'));",
+                  "  console.log('Created tenant flat id:', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rent\": 13500,\n  \"numberOfRooms\": 1,\n  \"area\": 480,\n  \"floorNumber\": 2,\n  \"totalFloors\": 5,\n  \"furnished\": false,\n  \"bathrooms\": 1,\n  \"parking\": false,\n  \"availableFrom\": \"2026-11-15\",\n  \"propertyType\": \"APARTMENT\",\n  \"description\": \"Postman test — tenant-created flat\",\n  \"available\": true,\n  \"address\": {\n    \"addressLine\": \"PM-Test Lane\",\n    \"city\": \"Pune\",\n    \"state\": \"Maharashtra\",\n    \"zipCode\": \"411001\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/flats"
+          }
+        },
+        {
+          "name": "My flats — should include tenantFlatId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(f => f.id);",
+                  "pm.test('contains my flat', () => {",
+                  "  pm.expect(ids).to.include(Number(pm.environment.get('tenantFlatId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/flats/me"
+          }
+        },
+        {
+          "name": "Public list — should NOT include tenantFlatId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(f => f.id);",
+                  "pm.test('hidden flat not in public list', () => {",
+                  "  pm.expect(ids).to.not.include(Number(pm.environment.get('tenantFlatId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?size=200"
+          }
+        },
+        {
+          "name": "Create flat as LANDLORD — expect verified=true, visible=true",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('landlordFlatId', data.id);",
+                  "  pm.test('verified is true', () => pm.expect(data.verified).to.eql(true));",
+                  "  pm.test('visible is true', () => pm.expect(data.visible).to.eql(true));",
+                  "  pm.test('ownerId present', () => pm.expect(data.ownerId).to.be.a('number'));",
+                  "  console.log('Created landlord flat id:', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{landlordToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rent\": 22000,\n  \"numberOfRooms\": 2,\n  \"area\": 850,\n  \"furnished\": true,\n  \"bathrooms\": 2,\n  \"parking\": true,\n  \"availableFrom\": \"2026-11-01\",\n  \"propertyType\": \"APARTMENT\",\n  \"description\": \"Postman test — landlord-created flat\",\n  \"available\": true,\n  \"address\": {\n    \"addressLine\": \"PM-Landlord Lane\",\n    \"city\": \"Pune\",\n    \"state\": \"Maharashtra\"\n  }\n}"
+            },
+            "url": "{{baseUrl}}/flats"
+          }
+        },
+        {
+          "name": "Public list — SHOULD include landlordFlatId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(f => f.id);",
+                  "pm.test('landlord flat visible', () => {",
+                  "  pm.expect(ids).to.include(Number(pm.environment.get('landlordFlatId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?size=200"
+          }
+        },
+        {
+          "name": "PATCH my own flat (tenant) — 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('rent updated', () => pm.expect(pm.response.json().rent).to.eql(14000));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rent\": 14000\n}"
+            },
+            "url": "{{baseUrl}}/flats/{{tenantFlatId}}"
+          }
+        },
+        {
+          "name": "PATCH someone else's flat — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rent\": 1\n}"
+            },
+            "url": "{{baseUrl}}/flats/{{landlordFlatId}}"
+          }
+        },
+        {
+          "name": "DELETE someone else's flat — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/flats/{{landlordFlatId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 — Reviews",
+      "item": [
+        {
+          "name": "Create review on tenant flat (as tenant) — PENDING",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201', () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const data = pm.response.json();",
+                  "  pm.environment.set('pendingReviewId', data.id);",
+                  "  pm.test('status PENDING', () => pm.expect(data.status).to.eql('PENDING'));",
+                  "  console.log('Created review id:', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Postman review\",\n  \"content\": \"Testing moderation flow with a Postman-created review.\",\n  \"rating\": 8\n}"
+            },
+            "url": "{{baseUrl}}/flats/{{tenantFlatId}}/reviews"
+          }
+        },
+        {
+          "name": "Public reviews — should not include PENDING",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(r => r.id);",
+                  "pm.test('pending not publicly visible', () => {",
+                  "  pm.expect(ids).to.not.include(Number(pm.environment.get('pendingReviewId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats/{{tenantFlatId}}/reviews"
+          }
+        },
+        {
+          "name": "My reviews (as tenant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(r => r.id);",
+                  "pm.test('includes my pending review', () => {",
+                  "  pm.expect(ids).to.include(Number(pm.environment.get('pendingReviewId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/users/me/reviews"
+          }
+        },
+        {
+          "name": "Admin — list pending reviews",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('has content array', () => pm.expect(data.content).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/reviews?status=PENDING"
+          }
+        },
+        {
+          "name": "Admin — APPROVE review (should promote flat to visible)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('status APPROVED', () => pm.expect(pm.response.json().status).to.eql('APPROVED'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"APPROVED\"\n}"
+            },
+            "url": "{{baseUrl}}/admin/reviews/{{pendingReviewId}}"
+          }
+        },
+        {
+          "name": "Public list — tenantFlatId now visible",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(f => f.id);",
+                  "pm.test('tenant flat now visible', () => {",
+                  "  pm.expect(ids).to.include(Number(pm.environment.get('tenantFlatId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?size=200"
+          }
+        },
+        {
+          "name": "Get tenant flat — expect verified=false, visible=true",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('verified=false', () => pm.expect(data.verified).to.eql(false));",
+                  "pm.test('visible=true', () => pm.expect(data.visible).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats/{{tenantFlatId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 — Admin controls",
+      "item": [
+        {
+          "name": "Admin — verify tenant flat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('verified now true', () => pm.expect(pm.response.json().verified).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/flats/{{tenantFlatId}}/verify"
+          }
+        },
+        {
+          "name": "Admin — hide landlord flat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('visible false', () => pm.expect(pm.response.json().visible).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/flats/{{landlordFlatId}}/visible"
+          }
+        },
+        {
+          "name": "Public list — landlord flat hidden",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "const ids = data.content.map(f => f.id);",
+                  "pm.test('hidden flat not in list', () => {",
+                  "  pm.expect(ids).to.not.include(Number(pm.environment.get('landlordFlatId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/flats?size=200"
+          }
+        },
+        {
+          "name": "Admin — show landlord flat again",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200', () => pm.response.to.have.status(200));",
+                  "pm.test('visible true', () => pm.expect(pm.response.json().visible).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/admin/flats/{{landlordFlatId}}/visible"
+          }
+        },
+        {
+          "name": "Non-admin hits admin endpoint — 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "{{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/reviews?status=PENDING"
+          }
+        }
+      ]
+    }
+  ]
+}

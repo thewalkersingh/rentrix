@@ -1,0 +1,87 @@
+{
+  "name": "Rentrix Local",
+  "variables": [
+    {
+      "name": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "accessToken",
+      "value": "",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "refreshToken",
+      "value": "",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "flatId",
+      "value": "",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "reviewId",
+      "value": "",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "tenantEmail",
+      "value": "tenant@rentrix.com",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "tenantPassword",
+      "value": "admin@1234",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "landlordEmail",
+      "value": "landlord@rentrix.com",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "landlordPassword",
+      "value": "admin@1234",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "adminEmail",
+      "value": "admin@rentrix.com",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    },
+    {
+      "name": "adminPassword",
+      "value": "admin@1234",
+      "type": "text",
+      "enabled": true,
+      "secret": false
+    }
+  ],
+  "info": {
+    "type": "bruno-environment",
+    "exportedAt": "2026-10-02T12:09:01.722Z",
+    "exportedUsing": "Bruno/v4.2.1"
+  }
+}

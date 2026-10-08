@@ -1,0 +1,257 @@
+{
+	"id": "3cb45485-ff78-4806-8c74-4846bd6013fa",
+	"name": "Rentrix v0.1.2 (existing users)",
+	"timestamp": "2026-10-02T12:50:00.803Z",
+	"collection_id": "18274153-f61c52ac-b121-4c0c-bed7-c0af175c4a92",
+	"folder_id": 0,
+	"environment_id": "18274153-c0b410e6-8aa0-495a-8f66-744cc62cbdbb",
+	"totalPass": 8,
+	"delay": 0,
+	"persist": true,
+	"status": "error",
+	"startedAt": "2026-10-02T12:49:59.302Z",
+	"totalFail": 2,
+	"results": [
+		{
+			"id": "1ec17378-fa75-4403-ba38-303da497c46c",
+			"name": "Health check",
+			"url": "http://localhost:8080/api/v1/actuator/health",
+			"time": 9,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"status 200": true
+			},
+			"testPassFailCounts": {
+				"status 200": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				9
+			],
+			"allTests": [
+				{
+					"status 200": true
+				}
+			]
+		},
+		{
+			"id": "e0ad2ef7-d298-4742-920c-f65dafde8632",
+			"name": "Login — tenant",
+			"url": "http://localhost:8080/api/v1/auth/login",
+			"time": 80,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"200": false
+			},
+			"testPassFailCounts": {
+				"200": {
+					"pass": 0,
+					"fail": 1
+				}
+			},
+			"times": [
+				80
+			],
+			"allTests": [
+				{
+					"200": false
+				}
+			]
+		},
+		{
+			"id": "d1aa4ece-d5f4-4e5d-b05f-c9458d0494c6",
+			"name": "Login — landlord",
+			"url": "http://localhost:8080/api/v1/auth/login",
+			"time": 82,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"200": false
+			},
+			"testPassFailCounts": {
+				"200": {
+					"pass": 0,
+					"fail": 1
+				}
+			},
+			"times": [
+				82
+			],
+			"allTests": [
+				{
+					"200": false
+				}
+			]
+		},
+		{
+			"id": "d759f821-2f0d-40c2-9e48-b5c20660a6fd",
+			"name": "Login — admin",
+			"url": "http://localhost:8080/api/v1/auth/login",
+			"time": 305,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200": true,
+				"role is ADMIN": true
+			},
+			"testPassFailCounts": {
+				"200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"role is ADMIN": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				305
+			],
+			"allTests": [
+				{
+					"200": true,
+					"role is ADMIN": true
+				}
+			]
+		},
+		{
+			"id": "1e74d187-3b92-41db-82b2-70f63a6512e1",
+			"name": "Me (as tenant)",
+			"url": "http://localhost:8080/api/v1/auth/me",
+			"time": 18,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200": true,
+				"email matches": true
+			},
+			"testPassFailCounts": {
+				"200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"email matches": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				18
+			],
+			"allTests": [
+				{
+					"200": true,
+					"email matches": true
+				}
+			]
+		},
+		{
+			"id": "57aab1e9-abc0-4b83-b7e1-52977376d73b",
+			"name": "Refresh",
+			"url": "http://localhost:8080/api/v1/auth/refresh",
+			"time": 11,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200": true,
+				"has accessToken": true
+			},
+			"testPassFailCounts": {
+				"200": {
+					"pass": 1,
+					"fail": 0
+				},
+				"has accessToken": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				11
+			],
+			"allTests": [
+				{
+					"200": true,
+					"has accessToken": true
+				}
+			]
+		},
+		{
+			"id": "e292f320-fe54-415b-abb7-b640bb650208",
+			"name": "List flats (default)",
+			"url": "http://localhost:8080/api/v1/flats?page=0&size=9",
+			"time": 10,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200": true
+			},
+			"testPassFailCounts": {
+				"200": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				10
+			],
+			"allTests": [
+				{
+					"200": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 515,
+	"collection": {
+		"requests": [
+			{
+				"id": "1ec17378-fa75-4403-ba38-303da497c46c",
+				"method": "GET"
+			},
+			{
+				"id": "e0ad2ef7-d298-4742-920c-f65dafde8632",
+				"method": "POST"
+			},
+			{
+				"id": "d1aa4ece-d5f4-4e5d-b05f-c9458d0494c6",
+				"method": "POST"
+			},
+			{
+				"id": "d759f821-2f0d-40c2-9e48-b5c20660a6fd",
+				"method": "POST"
+			},
+			{
+				"id": "1e74d187-3b92-41db-82b2-70f63a6512e1",
+				"method": "GET"
+			},
+			{
+				"id": "57aab1e9-abc0-4b83-b7e1-52977376d73b",
+				"method": "POST"
+			},
+			{
+				"id": "e292f320-fe54-415b-abb7-b640bb650208",
+				"method": "GET"
+			}
+		]
+	}
+}
