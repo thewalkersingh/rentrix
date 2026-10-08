@@ -55,12 +55,11 @@ public class AdminController {
 	}
 	
 	@DeleteMapping("/reviews/{id}")
-	public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
-		reviewService.deleteReview(id);
-		return ResponseEntity.noContent().build();
+	public ResponseEntity<String> deleteReview(@PathVariable Long id) {
+		return ResponseEntity.ok(reviewService.deleteReview(id));
 	}
 	
-	// -- Moderation queue ----------------------------------------------------
+	// -- All Moderation queue ----------------------------------------------------
 	@GetMapping("/reviews")
 	public PageResponse<ReviewDto> listReviews(@RequestParam(defaultValue = "PENDING") ReviewStatus status,
 		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
