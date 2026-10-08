@@ -1,4 +1,4 @@
-package com.rentrix.rentrixserver.dto;
+package com.rentrix.rentrixserver.dto.request;
 
 import com.rentrix.rentrixserver.entity.constants.Role;
 import jakarta.validation.constraints.Email;

@@ -1,7 +1,7 @@
 package com.rentrix.rentrixserver.service;
 
-import com.rentrix.rentrixserver.dto.PageResponse;
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import org.springframework.data.domain.Pageable;
 

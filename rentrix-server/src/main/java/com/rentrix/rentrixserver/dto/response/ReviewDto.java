@@ -1,4 +1,4 @@
-package com.rentrix.rentrixserver.dto;
+package com.rentrix.rentrixserver.dto.response;
 
 import lombok.Data;
 

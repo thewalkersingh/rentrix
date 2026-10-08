@@ -1,12 +1,12 @@
 package com.rentrix.rentrixserver.service.impl;
 
-import com.rentrix.rentrixserver.dto.PageResponse;
 import com.rentrix.rentrixserver.dto.filter.FlatFilterRequest;
 import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
 import com.rentrix.rentrixserver.dto.response.FlatSummaryResponse;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.User;
 import com.rentrix.rentrixserver.exception.ApiException;
@@ -142,7 +142,7 @@ public class FlatServiceImpl implements FlatService {
 		return FlatMapper.toResponse(flatRepository.save(flat));
 	}
 	
-	// Helper method to convert a Page<Flat> to PageResponse<FlatSummaryResponse> with ratings
+	// Helper method to convert a Page<Flat> to PageResponse<T> with ratings
 	private PageResponse<FlatSummaryResponse> flatSummaryPageResponse(Page<Flat> page) {
 		List<Long> flatIds = page.getContent().stream().map(Flat::getId).toList();
 		Map<Long, RatingAggregate> ratings = reviewService.getRatingAggregates(flatIds);

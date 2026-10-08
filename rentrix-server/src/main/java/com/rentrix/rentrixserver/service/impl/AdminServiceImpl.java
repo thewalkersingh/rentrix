@@ -1,7 +1,7 @@
 package com.rentrix.rentrixserver.service.impl;
 
-import com.rentrix.rentrixserver.dto.PageResponse;
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
@@ -36,7 +36,8 @@ public class AdminServiceImpl implements AdminService {
 			throw ApiException.badRequest("Cannot set status back to PENDING");
 		}
 		
-		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not found"));
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not " +
+																																	  "found"));
 		
 		review.setStatus(status);
 		Review saved = reviewRepository.save(review);

@@ -1,4 +1,4 @@
-package com.rentrix.rentrixserver.dto;
+package com.rentrix.rentrixserver.dto.request;
 
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import jakarta.validation.constraints.NotNull;

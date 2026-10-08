@@ -1,9 +1,9 @@
 package com.rentrix.rentrixserver.service.impl;
 
-import com.rentrix.rentrixserver.dto.CreateReviewRequest;
-import com.rentrix.rentrixserver.dto.PageResponse;
-import com.rentrix.rentrixserver.dto.ReviewDto;
 import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
+import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.User;

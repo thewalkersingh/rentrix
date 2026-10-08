@@ -1,11 +1,11 @@
 package com.rentrix.rentrixserver.controller;
 
-import com.rentrix.rentrixserver.dto.PageResponse;
 import com.rentrix.rentrixserver.dto.filter.FlatFilterRequest;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
 import com.rentrix.rentrixserver.dto.response.FlatSummaryResponse;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.FlatService;
 import jakarta.validation.Valid;
@@ -61,7 +61,8 @@ public class FlatController {
 	
 	/** Owner or ADMIN: partial update. */
 	@PatchMapping("/{id}")
-	public ResponseEntity<FlatResponse> updateFlat(@PathVariable Long id, @Valid @RequestBody UpdateFlatRequest request,
+	public ResponseEntity<FlatResponse> updateFlat(@PathVariable Long id,
+		@Valid @RequestBody UpdateFlatRequest request,
 		@AuthenticationPrincipal CustomUserDetails principal) {
 		boolean isAdmin = "ADMIN".equals(principal.getRole());
 		return ResponseEntity.ok(flatService.updateFlat(id, request, principal.getId(), isAdmin));

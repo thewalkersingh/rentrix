@@ -1,9 +1,9 @@
 package com.rentrix.rentrixserver.controller;
 
-import com.rentrix.rentrixserver.dto.ModerateReviewRequest;
-import com.rentrix.rentrixserver.dto.PageResponse;
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.request.ModerateReviewRequest;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import com.rentrix.rentrixserver.service.AdminService;
 import com.rentrix.rentrixserver.service.FlatService;

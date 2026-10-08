@@ -1,7 +1,7 @@
 package com.rentrix.rentrixserver.integration;
 
-import com.rentrix.rentrixserver.dto.LoginRequest;
-import com.rentrix.rentrixserver.dto.SignupRequest;
+import com.rentrix.rentrixserver.dto.request.LoginRequest;
+import com.rentrix.rentrixserver.dto.request.SignupRequest;
 import com.rentrix.rentrixserver.entity.User;
 import com.rentrix.rentrixserver.entity.constants.Role;
 import com.rentrix.rentrixserver.support.BaseIntegrationTest;

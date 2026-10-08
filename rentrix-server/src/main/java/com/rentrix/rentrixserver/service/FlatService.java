@@ -1,10 +1,10 @@
 package com.rentrix.rentrixserver.service;
-import com.rentrix.rentrixserver.dto.PageResponse;
 import com.rentrix.rentrixserver.dto.filter.FlatFilterRequest;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
 import com.rentrix.rentrixserver.dto.response.FlatSummaryResponse;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
 
 public interface FlatService {

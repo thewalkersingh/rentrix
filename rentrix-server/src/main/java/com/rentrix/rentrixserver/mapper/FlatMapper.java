@@ -13,7 +13,8 @@ public final class FlatMapper {
 	
 	private FlatMapper() {}
 	
-	// ── Entity → Response ──────────────────────────────────────────────────
+	// ── Entity → Response (detail) ─────────────────────────────────────────
+	
 	public static FlatResponse toResponse(Flat flat) {
 		if (flat == null) return null;
 		
@@ -50,6 +51,17 @@ public final class FlatMapper {
 		return b.build();
 	}
 	
+	public static FlatResponse toResponse(Flat flat, RatingAggregate aggregate) {
+		FlatResponse response = toResponse(flat);
+		if (response != null && aggregate != null) {
+			response.setAverageRating(aggregate.averageRating());
+			response.setReviewCount(aggregate.reviewCount());
+		}
+		return response;
+	}
+	
+	// ── Entity → Summary (list view) ───────────────────────────────────────
+	
 	public static FlatSummaryResponse toSummary(Flat flat) {
 		if (flat == null) return null;
 		
@@ -78,7 +90,17 @@ public final class FlatMapper {
 										  .build();
 	}
 	
+	public static FlatSummaryResponse toSummary(Flat flat, RatingAggregate aggregate) {
+		FlatSummaryResponse response = toSummary(flat);
+		if (response != null && aggregate != null) {
+			response.setAverageRating(aggregate.averageRating());
+			response.setReviewCount(aggregate.reviewCount());
+		}
+		return response;
+	}
+	
 	// ── Request → Entity ───────────────────────────────────────────────────
+	
 	public static Flat toEntity(CreateFlatRequest req) {
 		if (req == null) return null;
 		Flat flat = new Flat();
@@ -103,10 +125,6 @@ public final class FlatMapper {
 		flat.setAddress(toAddressEntity(req.getAddress()));
 	}
 	
-	/**
-	 * Partial update — only overwrites fields present in the request.
-	 * Null fields in the request are ignored.
-	 */
 	public static void copyTo(Flat flat, UpdateFlatRequest req) {
 		if (flat == null || req == null) return;
 		if (req.getRent() != null) flat.setRent(req.getRent());
@@ -132,6 +150,7 @@ public final class FlatMapper {
 	}
 	
 	// ── Address helpers ────────────────────────────────────────────────────
+	
 	private static AddressDto toAddressDto(Address a) {
 		if (a == null) return null;
 		return AddressDto.builder()
@@ -160,26 +179,6 @@ public final class FlatMapper {
 		if (src.getCity() != null) target.setCity(src.getCity());
 		if (src.getState() != null) target.setState(src.getState());
 		if (src.getZipCode() != null) target.setZipCode(src.getZipCode());
-	}
-	// In FlatMapper.java, add these methods. Keep the existing ones too —
-// they'll be used when no aggregate is available (single detail fetch without ratings).
-	
-	public static FlatSummaryResponse toSummary(Flat flat, RatingAggregate aggregate) {
-		FlatSummaryResponse response = toSummary(flat);
-		if (response != null && aggregate != null) {
-			response.setAverageRating(aggregate.averageRating());
-			response.setReviewCount(aggregate.reviewCount());
-		}
-		return response;
-	}
-	
-	public static FlatResponse toResponse(Flat flat, RatingAggregate aggregate) {
-		FlatResponse response = toResponse(flat);
-		if (response != null && aggregate != null) {
-			response.setAverageRating(aggregate.averageRating());
-			response.setReviewCount(aggregate.reviewCount());
-		}
-		return response;
 	}
 	
 }

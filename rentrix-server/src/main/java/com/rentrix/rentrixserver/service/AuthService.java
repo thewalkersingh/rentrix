@@ -1,9 +1,9 @@
 package com.rentrix.rentrixserver.service;
 
-import com.rentrix.rentrixserver.dto.AuthResponse;
-import com.rentrix.rentrixserver.dto.LoginRequest;
-import com.rentrix.rentrixserver.dto.SignupRequest;
-import com.rentrix.rentrixserver.dto.UserDto;
+import com.rentrix.rentrixserver.dto.request.LoginRequest;
+import com.rentrix.rentrixserver.dto.request.SignupRequest;
+import com.rentrix.rentrixserver.dto.response.AuthResponse;
+import com.rentrix.rentrixserver.dto.response.UserDto;
 
 public interface AuthService {
 	

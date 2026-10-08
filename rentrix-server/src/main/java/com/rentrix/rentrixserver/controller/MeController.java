@@ -1,7 +1,7 @@
 package com.rentrix.rentrixserver.controller;
 
-import com.rentrix.rentrixserver.dto.PageResponse;
-import com.rentrix.rentrixserver.dto.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.ReviewService;
 import lombok.RequiredArgsConstructor;

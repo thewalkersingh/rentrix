@@ -4,6 +4,7 @@ import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,10 +15,13 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 	
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address"})
 	Page<Review> findByFlatIdAndStatus(Long flatId, ReviewStatus status, Pageable pageable);
 	
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address"})
 	Page<Review> findByUserId(Long userId, Pageable pageable);
 	
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address"})
 	Page<Review> findByStatus(ReviewStatus status, Pageable pageable);
 	
 	/**
