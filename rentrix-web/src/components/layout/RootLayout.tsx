@@ -4,17 +4,14 @@ import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/features/auth/store"
 import { useAuthBootstrap } from "@/features/auth/hooks/useAuthBootstrap"
 import { env } from "@/lib/env"
-import { useLogout } from "@/features/auth/hooks/useLogout.ts"
 import { useMe } from "@/features/auth/hooks/useMe.ts"
-import { ThemeToggle } from "@/components/common/ThemeToggle.tsx"
-import { Home, Plus } from "lucide-react"
+import { Home } from "lucide-react"
 import { cn } from "cn"
+import { UserMenu } from "@/components/layout/UserMenu.tsx"
 
 export function RootLayout() {
-  useAuthBootstrap()
   const { isAuthenticated, user } = useAuthStore()
-
-  const logout = useLogout()
+  useAuthBootstrap()
   useMe()
 
   return (
@@ -43,46 +40,8 @@ export function RootLayout() {
               Flats
             </NavLink>
 
-            {isAuthenticated && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/me/reviews">My Reviews</Link>
-              </Button>
-            )}
-            {user?.role === "ADMIN" && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/admin">Admin</Link>
-              </Button>
-            )}
-            {isAuthenticated && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/me/flats">My Flats</Link>
-              </Button>
-            )}
-            {isAuthenticated && (
-              <Button asChild size="sm" className="hidden sm:inline-flex">
-                <Link to="/me/flats/new">
-                  <Plus className="mr-1 h-4 w-4" />
-                  Add place
-                </Link>
-              </Button>
-            )}
-
-            {isAuthenticated && (
-              <Button asChild size="icon" className="sm:hidden" aria-label="Add place">
-                <Link to="/me/flats/new">
-                  <Plus className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
-
-            <ThemeToggle />
             {isAuthenticated ? (
-              <>
-                <span className="text-sm text-muted-foreground">{user?.name}</span>
-                <Button variant="outline" size="sm" onClick={() => logout.mutate()}>
-                  Logout
-                </Button>
-              </>
+              <UserMenu />
             ) : (
               <>
                 <Button asChild variant="ghost" size="sm">
