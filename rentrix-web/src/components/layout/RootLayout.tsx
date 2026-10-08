@@ -5,18 +5,20 @@ import { useAuthStore } from "@/features/auth/store"
 import { useAuthBootstrap } from "@/features/auth/hooks/useAuthBootstrap"
 import { env } from "@/lib/env"
 import { useMe } from "@/features/auth/hooks/useMe.ts"
-import { Home } from "lucide-react"
+import { Home, Plus } from "lucide-react"
 import { cn } from "cn"
 import { UserMenu } from "@/components/layout/UserMenu.tsx"
+import {ThemeToggle} from "@/components/common/ThemeToggle.tsx";
+import {MobileNav} from "@/components/layout/MobileNav.tsx";
 
 export function RootLayout() {
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
   useAuthBootstrap()
   useMe()
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60">
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -26,11 +28,12 @@ export function RootLayout() {
           </Link>
 
           <nav className="flex items-center gap-2">
+            {/* Desktop-only nav */}
             <NavLink
               to="/flats"
               className={({ isActive }) =>
                 cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  "hidden rounded-md px-3 py-1.5 text-sm font-medium transition-colors md:inline-flex",
                   isActive
                     ? "bg-accent text-foreground"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground",
@@ -40,18 +43,45 @@ export function RootLayout() {
               Flats
             </NavLink>
 
-            {isAuthenticated ? (
-              <UserMenu />
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link to="/login">Login</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link to="/signup">Sign up</Link>
-                </Button>
-              </>
+            {/* Add place — desktop */}
+            {isAuthenticated && (
+              <Button asChild size="sm" className="hidden md:inline-flex">
+                <Link to="/me/flats/new">
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add place
+                </Link>
+              </Button>
             )}
+
+            {/* Add place — mobile icon-only */}
+            {isAuthenticated && (
+              <Button asChild size="icon" className="md:hidden" aria-label="Add place">
+                <Link to="/me/flats/new">
+                  <Plus className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+
+            <ThemeToggle />
+
+            {/* User menu — desktop only */}
+            <div className="hidden md:flex md:items-center md:gap-2">
+              {isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                <>
+                  <Button asChild variant="ghost" size="sm">
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/signup">Sign up</Link>
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile hamburger */}
+            <MobileNav />
           </nav>
         </div>
       </header>
