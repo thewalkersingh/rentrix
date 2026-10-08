@@ -48,24 +48,33 @@ export function RootLayout() {
                 <Link to="/me/reviews">My Reviews</Link>
               </Button>
             )}
+            {user?.role === "ADMIN" && (
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin">Admin</Link>
+              </Button>
+            )}
             {isAuthenticated && (
               <Button asChild variant="ghost" size="sm">
                 <Link to="/me/flats">My Flats</Link>
               </Button>
             )}
             {isAuthenticated && (
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="hidden sm:inline-flex">
                 <Link to="/me/flats/new">
                   <Plus className="mr-1 h-4 w-4" />
-                  <span className="hidden sm:inline">Add place</span>
+                  Add place
                 </Link>
               </Button>
             )}
-            {user?.role === "ADMIN" && (
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/admin">Admin</Link>
+
+            {isAuthenticated && (
+              <Button asChild size="icon" className="sm:hidden" aria-label="Add place">
+                <Link to="/me/flats/new">
+                  <Plus className="h-4 w-4" />
+                </Link>
               </Button>
             )}
+
             <ThemeToggle />
             {isAuthenticated ? (
               <>
