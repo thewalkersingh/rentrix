@@ -58,6 +58,11 @@ public class S3StorageService implements StorageService {
 		return base.replaceAll("/+$", "") + "/" + key;
 	}
 	
+	@Override
+	public String presignedPrivateUrl(String key, int expiryMinutes) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+	
 	// ── Internal helpers ──────────────────────────────────────────────────
 	
 	private String buildKey(String prefix, String filename) {

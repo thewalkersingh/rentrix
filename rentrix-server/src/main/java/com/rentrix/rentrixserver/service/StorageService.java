@@ -36,4 +36,12 @@ public interface StorageService {
 	 */
 	String publicUrlForKey(String key);
 	
+	/**
+	 * Generates a short-lived presigned URL for a private object.
+	 *
+	 * @param key           S3 key in the private bucket
+	 * @param expiryMinutes how long the URL is valid
+	 */
+	String presignedPrivateUrl(String key, int expiryMinutes);
+	
 }

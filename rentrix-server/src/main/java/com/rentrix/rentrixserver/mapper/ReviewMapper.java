@@ -28,6 +28,11 @@ public final class ReviewMapper {
 										 : null);
 		}
 		
+		// v0.1.3 — proof of living
+		boolean hasProof = review.getProofStorageKey() != null;
+		dto.setHasProof(hasProof);
+		dto.setVerifiedStay(hasProof && Boolean.TRUE.equals(review.getProofVerified()));
+		
 		return dto;
 	}
 	

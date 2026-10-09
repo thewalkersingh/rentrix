@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -110,6 +111,21 @@ public class ReviewServiceImpl implements ReviewService {
 			result.put(flatId, new RatingAggregate(avg, count));
 		}
 		return result;
+	}
+	
+	@Override
+	public void uploadProof(Long reviewId, MultipartFile file, Long requesterId) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+	
+	@Override
+	public String getProofUrl(Long reviewId, Long requesterId, boolean isAdmin) {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+	
+	@Override
+	public void deleteProof(Long reviewId, Long requesterId, boolean isAdmin) {
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 	
 }

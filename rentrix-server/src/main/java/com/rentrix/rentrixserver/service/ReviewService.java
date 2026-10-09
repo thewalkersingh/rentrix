@@ -5,6 +5,7 @@ import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
 import com.rentrix.rentrixserver.dto.response.PageResponse;
 import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -28,5 +29,22 @@ public interface ReviewService {
 	 * Returns a map keyed by flat ID. Flats with no APPROVED reviews are absent.
 	 */
 	Map<Long, RatingAggregate> getRatingAggregates(List<Long> flatIds);
+	
+	/**
+	 * Uploads a proof-of-living document for a review.
+	 * Only the review owner may upload, and only while status is PENDING.
+	 */
+	void uploadProof(Long reviewId, MultipartFile file, Long requesterId);
+	
+	/**
+	 * Generates a short-lived presigned URL to view a review's proof.
+	 * Only review owner or ADMIN.
+	 */
+	String getProofUrl(Long reviewId, Long requesterId, boolean isAdmin);
+	
+	/**
+	 * Deletes a review's proof (before approval).
+	 */
+	void deleteProof(Long reviewId, Long requesterId, boolean isAdmin);
 	
 }
