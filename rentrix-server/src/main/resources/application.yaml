@@ -9,6 +9,9 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
+  output:
+    ansi:
+      enabled: always
 # --- Actuator (lightweight health & metrics) -------------------------------
 management:
   endpoints:
@@ -22,11 +25,13 @@ management:
 
 # --- Logging -----------------------------------------------------------------
 logging:
+
   level:
     root: WARN
     com.rentrix: INFO
     org.springframework.security: WARN
     org.hibernate: WARN
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR   # ✅ added
 
 
 app:
