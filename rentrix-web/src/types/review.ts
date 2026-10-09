@@ -9,8 +9,10 @@ export interface Review {
   title: string
   content: string
   rating: number
+
   reviewDate?: string
   createdAt?: string
+   
   status: ReviewStatus
 
   // v0.1.3 — proof of living

@@ -9,12 +9,16 @@ import { useState } from "react"
 import { reviewsApi } from "@/api/reviews"
 import { toast } from "sonner"
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+function formatDate(iso?: string | null) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
 }
 
 export default function AdminPage() {
@@ -101,7 +105,13 @@ export default function AdminPage() {
                   {r.flatAddress ?? `Flat #${r.flatId}`}
                 </Link>
               </div>
-              <span className="text-xs text-muted-foreground">{formatDate(r.createdAt ?? "")}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDate(r.createdAt ?? r.reviewDate) && (
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(r.createdAt ?? r.reviewDate)}
+                  </span>
+                )}
+              </span>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
