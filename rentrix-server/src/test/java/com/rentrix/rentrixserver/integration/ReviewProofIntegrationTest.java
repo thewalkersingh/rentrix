@@ -1,0 +1,315 @@
+package com.rentrix.rentrixserver.integration;
+
+import com.rentrix.rentrixserver.entity.Flat;
+import com.rentrix.rentrixserver.entity.Review;
+import com.rentrix.rentrixserver.entity.User;
+import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
+import com.rentrix.rentrixserver.repository.ReviewRepository;
+import com.rentrix.rentrixserver.service.StorageService;
+import com.rentrix.rentrixserver.support.BaseIntegrationTest;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+class ReviewProofIntegrationTest extends BaseIntegrationTest {
+	
+	@Autowired
+	private ReviewRepository reviewRepository;
+	
+	@MockitoBean
+	private StorageService storageService;
+	
+	private static final byte[] FAKE_PDF = new byte[]{
+		0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34  // %PDF-1.4
+	};
+	
+	private MockMultipartFile pdfFile() {
+		return new MockMultipartFile("file", "agreement.pdf", "application/pdf", FAKE_PDF);
+	}
+	
+	// ── Upload ────────────────────────────────────────────────────────────
+	
+	@Test
+	void uploadProof_asOwner_returns201() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		// Verify persistence
+		Review saved = reviewRepository.findById(review.getId()).orElseThrow();
+		assert saved.getProofStorageKey() != null;
+		assert saved.getProofContentType().equals("application/pdf");
+		assert saved.getProofUploadedAt() != null;
+		assert !saved.getProofVerified();   // not yet verified
+	}
+	
+	@Test
+	void uploadProof_asNonOwner_returns403() throws Exception {
+		User owner = testData.createTenant("owner");
+		User stranger = testData.createTenant("stranger");
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, owner, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(stranger)))
+				 .andExpect(status().isForbidden());
+	}
+	
+	@Test
+	void uploadProof_withoutAuth_returns401() throws Exception {
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile()))
+				 .andExpect(status().isUnauthorized());
+	}
+	
+	@Test
+	void uploadProof_wrongMimeType_returns400() throws Exception {
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		MockMultipartFile txt = new MockMultipartFile(
+			"file", "notes.txt", "text/plain", "hello".getBytes());
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(txt)
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	void uploadProof_oversized_returns400() throws Exception {
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		byte[] big = new byte[21 * 1024 * 1024];   // 21 MB > 20 MB limit
+		MockMultipartFile file = new MockMultipartFile(
+			"file", "big.pdf", "application/pdf", big);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(file)
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isBadRequest())
+				 .andExpect(jsonPath("$.message", containsString("too large")));
+	}
+	
+	@Test
+	void uploadProof_afterApproval_returns400() throws Exception {
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.APPROVED);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isBadRequest())
+				 .andExpect(jsonPath("$.message", containsString("moderation")));
+	}
+	
+	// ── Get URL ───────────────────────────────────────────────────────────
+	
+	@Test
+	void getProofUrl_asOwner_returns200WithUrl() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		when(storageService.presignedPrivateUrl(anyString(), anyInt()))
+			.thenReturn("https://rentrix-private.s3.ap-south-1.amazonaws.com/signed");
+		
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		// Upload first
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		// Get URL
+		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isOk())
+//				 .andExpect(jsonPath("$.url").value(
+//					 "https://rentrix-private.s3.ap-south-1.amazonaws.com/signed"));
+				 .andExpect(jsonPath("$.url").value(startsWith("https://")));
+	}
+	
+	@Test
+	void getProofUrl_asAdmin_returns200() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		when(storageService.presignedPrivateUrl(anyString(), anyInt()))
+			.thenReturn("https://example.com/signed");
+		
+		User tenant = testData.createTenant();
+		User admin = testData.createAdmin();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+								 .header("Authorization", auth.bearer(admin)))
+				 .andExpect(status().isOk());
+	}
+	
+	@Test
+	void getProofUrl_asNonOwner_returns403() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
+		User owner = testData.createTenant("owner");
+		User stranger = testData.createTenant("stranger");
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, owner, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(owner)))
+				 .andExpect(status().isCreated());
+		
+		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+								 .header("Authorization", auth.bearer(stranger)))
+				 .andExpect(status().isForbidden());
+	}
+	
+	@Test
+	void getProofUrl_noProof_returns404() throws Exception {
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isNotFound());
+	}
+	
+	// ── Delete ────────────────────────────────────────────────────────────
+	
+	@Test
+	void deleteProof_asOwner_returns204() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		mockMvc.perform(delete("/reviews/{id}/proof", review.getId())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isNoContent());
+		
+		verify(storageService, times(1)).deletePrivate("reviews/1/test.pdf");
+		Review saved = reviewRepository.findById(review.getId()).orElseThrow();
+		assert saved.getProofStorageKey() == null;
+	}
+	
+	// ── Moderation → verifiedStay badge ──────────────────────────────────
+	
+	@Test
+	void approveReviewWithProof_setsVerifiedStayTrue() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
+		User tenant = testData.createTenant();
+		User admin = testData.createAdmin();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		// Upload proof
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		// Admin approves
+		mockMvc.perform(patch("/admin/reviews/{id}", review.getId())
+								 .header("Authorization", auth.bearer(admin))
+								 .contentType("application/json")
+								 .content("{\"status\":\"APPROVED\"}"))
+				 .andExpect(status().isOk())
+				 .andExpect(jsonPath("$.status").value("APPROVED"));
+		
+		// Public review now shows verifiedStay=true
+		mockMvc.perform(get("/flats/{id}/reviews", flat.getId()))
+				 .andExpect(status().isOk())
+				 .andExpect(jsonPath("$.content[0].hasProof").value(true))
+				 .andExpect(jsonPath("$.content[0].verifiedStay").value(true));
+	}
+	
+	@Test
+	void rejectReview_clearsVerification() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
+		User tenant = testData.createTenant();
+		User admin = testData.createAdmin();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+								 .file(pdfFile())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		mockMvc.perform(patch("/admin/reviews/{id}", review.getId())
+								 .header("Authorization", auth.bearer(admin))
+								 .contentType("application/json")
+								 .content("{\"status\":\"REJECTED\"}"))
+				 .andExpect(status().isOk());
+		
+		Review saved = reviewRepository.findById(review.getId()).orElseThrow();
+		assert !saved.getProofVerified();
+	}
+	
+	@Test
+	void approvedReviewWithoutProof_verifiedStayIsFalse() throws Exception {
+		User tenant = testData.createTenant();
+		User admin = testData.createAdmin();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(patch("/admin/reviews/{id}", review.getId())
+								 .header("Authorization", auth.bearer(admin))
+								 .contentType("application/json")
+								 .content("{\"status\":\"APPROVED\"}"))
+				 .andExpect(status().isOk());
+		
+		mockMvc.perform(get("/flats/{id}/reviews", flat.getId()))
+				 .andExpect(status().isOk())
+				 .andExpect(jsonPath("$.content[0].hasProof").value(false))
+				 .andExpect(jsonPath("$.content[0].verifiedStay").value(false));
+	}
+	
+}

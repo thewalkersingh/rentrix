@@ -132,10 +132,14 @@ export function RootLayout() {
             <p className="text-sm font-medium">Legal</p>
             <ul className="space-y-1 text-sm text-muted-foreground">
               <li>
-                <span className="cursor-not-allowed">Privacy</span>
+                <Link to="/privacy" className="hover:text-foreground">
+                  Privacy Policy
+                </Link>
               </li>
               <li>
-                <span className="cursor-not-allowed">Terms</span>
+                <Link to="/terms" className="hover:text-foreground">
+                  Terms of Service
+                </Link>
               </li>
             </ul>
           </div>

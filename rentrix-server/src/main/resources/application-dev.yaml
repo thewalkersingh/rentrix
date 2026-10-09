@@ -21,10 +21,10 @@ Spring:
 
   # -------------------- JPA / Hibernate (MySQL) --------------------
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update                      # Use 'validate' in production
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: false
@@ -50,3 +50,4 @@ app:
     secret: ${JWT_SECRET}
     access-token-expiry-ms: 900000
     refresh-token-expiry-ms: 604800000
+    # 10 MB

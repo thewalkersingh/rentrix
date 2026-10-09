@@ -8,12 +8,16 @@ import { Badge } from "@/components/ui/badge"
 import { Star } from "lucide-react"
 import { EmptyState } from "@/components/common/EmptyState.tsx"
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+function formatDate(iso?: string | null) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
 }
 
 export default function MyReviewsPage() {
@@ -84,7 +88,13 @@ export default function MyReviewsPage() {
                   {r.flatAddress ?? `Flat #${r.flatId}`}
                 </Link>
               </div>
-              <span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDate(r.createdAt ?? r.reviewDate) && (
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(r.createdAt ?? r.reviewDate)}
+                  </span>
+                )}
+              </span>
             </CardHeader>
             <CardContent className="space-y-2">
               <h3 className="leading-tight font-semibold">{r.title}</h3>

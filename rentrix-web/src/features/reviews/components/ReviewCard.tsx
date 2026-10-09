@@ -1,18 +1,20 @@
-import { Star } from "lucide-react"
+import { BadgeCheck, Star } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import type { Review } from "@/types"
 
 function initials(name: string | null | undefined) {
-   if (!name) return '?'
-   return name
-       .split(' ')
-       .map((p) => p[0])
-       .filter(Boolean)
-       .slice(0, 2)
-       .join('')
-       .toUpperCase() || '?'
+  if (!name) return "?"
+  return (
+    name
+      .split(" ")
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  )
 }
 
 function ratingColor(rating: number) {
@@ -21,12 +23,16 @@ function ratingColor(rating: number) {
   return "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+function formatDate(iso?: string) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
 }
 
 export function ReviewCard({ review }: { review: Review }) {
@@ -38,8 +44,25 @@ export function ReviewCard({ review }: { review: Review }) {
             <AvatarFallback>{initials(review.userName)}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-medium">{review.userName}</p>
-            <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">{review.userName}</p>
+              {review.verifiedStay && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 border-green-500/30 bg-green-50 text-green-800 dark:bg-green-950/20 dark:text-green-300"
+                >
+                  <BadgeCheck className="h-3 w-3" />
+                  Verified stay
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatDate(review.createdAt ?? review.reviewDate) && (
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(review.createdAt ?? review.reviewDate)}
+                </p>
+              )}
+            </p>
           </div>
         </div>
         <Badge className={ratingColor(review.rating)}>

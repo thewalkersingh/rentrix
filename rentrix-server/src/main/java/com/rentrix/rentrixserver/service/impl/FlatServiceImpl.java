@@ -36,6 +36,7 @@ public class FlatServiceImpl implements FlatService {
 	private final ReviewService reviewService;
 	
 	@Override
+	@Transactional(readOnly = true)
 	public PageResponse<FlatSummaryResponse> listFlats(FlatFilterRequest filter, Pageable pageable) {
 		log.info("Listing flats with filters: {}", filter);
 		
@@ -47,6 +48,7 @@ public class FlatServiceImpl implements FlatService {
 	}
 	
 	@Override
+	@Transactional(readOnly = true)
 	public PageResponse<FlatSummaryResponse> listMyFlats(Long userId, Pageable pageable) {
 		log.info("Listing flats for user id={}", userId);
 		

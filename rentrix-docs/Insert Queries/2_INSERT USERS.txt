@@ -1,0 +1,13 @@
+INSERT INTO users (id, email, password, role, deleted, created_at, updated_at)
+VALUES
+(1,'admin@rentrix.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','ADMIN',false,NOW(),NOW()),
+
+(2,'landlord1@rentrix.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','LANDLORD',false,NOW(),NOW()),
+(3,'landlord2@rentrix.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','LANDLORD',false,NOW(),NOW()),
+(4,'landlord3@rentrix.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','LANDLORD',false,NOW(),NOW()),
+(5,'landlord4@rentrix.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','LANDLORD',false,NOW(),NOW()),
+
+(6,'tenant1@gmail.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','TENANT',false,NOW(),NOW()),
+(7,'tenant2@gmail.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','TENANT',false,NOW(),NOW()),
+(8,'tenant3@gmail.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','TENANT',false,NOW(),NOW()),
+(9,'tenant4@gmail.com','$2a$12$bPVP41Sa2ntPVVXN/DPpdubgWpd5.Y/3ie9CFLs5jIFWkOCU60ZcS','TENANT',false,NOW(),NOW());

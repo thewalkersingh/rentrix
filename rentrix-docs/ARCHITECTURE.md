@@ -26,7 +26,7 @@ No component or hook changes required.
 ### Auth
 
 | Method | Path | Request | Response |
-|--------|------|---------|----------|
+| -------- | ------ | --------- | ---------- |
 | POST | /api/v1/auth/signup | { email, password, name, role } | { user, accessToken, refreshToken } |
 | POST | /api/v1/auth/login | { email, password } | { user, accessToken, refreshToken } |
 | POST | /api/v1/auth/refresh | { refreshToken } | { accessToken } |
@@ -43,7 +43,7 @@ No component or hook changes required.
 ### Reviews
 
 | Method | Path | Request | Response |
-|--------|------|---------|----------|
+| -------- | ------ | --------- | ---------- |
 | GET | /api/v1/flats/:id/reviews | page, size | Page<Review> |
 | POST | /api/v1/flats/:id/reviews | { title, content, rating } | Review |
 | GET | /api/v1/users/me/reviews | — | Page<Review> |
@@ -60,13 +60,16 @@ See `src/types/*.ts` — those interfaces are the contract.
       description, isAvailable, averageRating?, reviewCount? }
 
 ### Review
+
     { id, userId, userName, flatId, flatAddress?, title, content,
       rating, reviewDate, status }
 
 ### ReviewStatus
+
     'PENDING' | 'APPROVED' | 'REJECTED'
 
 #### Note
+
     Newly submitted reviews default to PENDING.
     Only APPROVED reviews appear on the public flat detail page.
     mockMyReviews returns all of the user's reviews regardless of status.
@@ -108,10 +111,10 @@ Zustand store (Step 5) will call `tokenStore.set(access, refresh)` on login and
 ## Mock users (login credentials in mock mode)
 
 | Email | Role | Password (any ≥4 chars) |
-|-------|------|--------------------------|
-| tenant@rentrix.test | TENANT | anything |
-| landlord@rentrix.test | LANDLORD | anything |
-| admin@rentrix.test | ADMIN | anything |
+| ------- | ------ | -------------------------- |
+| <tenant@rentrix.test> | TENANT | anything |
+| <landlord@rentrix.test> | LANDLORD | anything |
+| <admin@rentrix.test> | ADMIN | anything |
 
 ## Gotchas
 
@@ -122,17 +125,20 @@ Zustand store (Step 5) will call `tokenStore.set(access, refresh)` on login and
 ## Status (updated YYYY-MM-DD)
 
 ### ✅ Deployed and working
-- Frontend: https://myrentrix.vercel.app
-- Backend: https://rentrix-wj1j.onrender.com
+
+- Frontend: <https://myrentrix.vercel.app>
+- Backend: <https://rentrix-wj1j.onrender.com>
 - Database: Aiven PostgreSQL
 
 ### ✅ Endpoints live on backend
+
 - GET /api/v1/flats (paginated)
 - GET /api/v1/flats/:id
 - GET /api/v1/reviews
 - GET /api/v1/reviews/:id
 
 ### 🔜 Endpoints still to build (Phase 2C)
+
 - POST /api/v1/auth/signup
 - POST /api/v1/auth/login
 - POST /api/v1/auth/refresh
@@ -144,5 +150,111 @@ Zustand store (Step 5) will call `tokenStore.set(access, refresh)` on login and
 - PATCH /api/v1/admin/reviews/:id
 
 ### 🎭 Mocks currently in frontend
+
 - src/api/mock/ still exists but USE_MOCKS=false in prod
 - Delete the mock folder after Phase 2C ships
+
+## File Storage
+
+### Buckets
+
+| Bucket | Visibility | Purpose |
+| --- | --- | --- |
+| `rentrix-media` | Public read | Flat photos |
+| `rentrix-private` | Private | Proof-of-living documents (future) |
+
+**Region:** `ap-south-1` (Mumbai)
+**Public base URL:** `https://rentrix-media.s3.ap-south-1.amazonaws.com`
+
+### Key structure
+
+```
+    rentrix-media/
+    ├── flats/{flatId}/{uuid}.jpg ← flat photos
+    └── users/{userId}/{uuid}.jpg ← avatars (future)
+
+    rentrix-private/
+    └── reviews/{reviewId}/{uuid}.pdf ← proof-of-living (future)
+```
+
+- **Entity-first layout** — cleanup on delete becomes `s3.deleteByPrefix("flats/{id}/")`
+- **UUID filenames** — collision-proof, no PII leak
+- **Original filename** stored in DB only, never in the S3 key
+
+### Image processing pipeline
+
+1. **Validate** — size ≤10 MB, MIME type ∈ {image/jpeg, image/png, image/webp}
+2. **Re-encode** via Thumbnailator — strips EXIF (GPS, camera data), max 1920px longest edge, JPEG quality 0.85
+3. **Upload** to S3 with `Cache-Control: public, max-age=31536000, immutable`
+4. **Persist** metadata in `flat_images` (storage_key, public_url, size_bytes, display_order, is_primary)
+
+### Rules
+
+- Max **10 images per flat**
+- First upload auto-becomes `is_primary = true`
+- Deleting the primary auto-promotes the next image
+- Delete is soft (DB) + best-effort (S3); orphaned S3 objects are acceptable
+- Only **owner, creator, or ADMIN** can upload/delete/set-primary
+
+### Local development
+
+Credentials in `.env` (gitignored):
+
+```
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY=...
+AWS_SECRET_KEY=...
+AWS_BUCKET=rentrix-media
+AWS_PRIVATE_BUCKET=rentrix-private
+AWS_PUBLIC_URL=https://rentrix-media.s3.ap-south-1.amazonaws.com
+```
+
+**Do not commit `.env`.** In prod, Render environment variables.
+
+### Proof of Living
+
+Reviews can optionally include proof that the tenant lived at the flat.
+Documents are stored in **`rentrix-private`** (not public).
+
+#### Storage layout
+```
+rentrix-private/
+└── reviews/{reviewId}/{uuid}.{pdf|jpg}
+
+```
+
+
+#### Pipeline
+
+1. **Upload** — `POST /reviews/{reviewId}/proof` (owner only, PENDING only)
+2. **Validate** — PDF, JPG, PNG, WebP; max 20 MB
+3. **Process**
+   - PDF → passed through unchanged
+   - Images → Thumbnailator: EXIF stripped, max 2400px, JPEG output
+4. **Store** — private bucket, no public URL
+5. **Verify** — admin approves the review → `proof_verified = true`
+6. **Display** — public reviews show "Verified stay" badge only after admin approval
+
+#### Access
+
+- Public visitors never see the file
+- Owner and admin get a **15-minute presigned URL** via `GET /reviews/{id}/proof-url`
+- URL expires automatically; no persistent links
+
+#### Lifecycle
+
+| State | proofStorageKey | proofVerified | Public badge |
+|---|---|---|---|
+| No proof | null | false | — |
+| Uploaded, pending | set | false | — |
+| Approved | set | true | "Verified stay" |
+| Rejected | set | false | — |
+| Deleted | null | false | — |
+
+#### Rules
+
+- One proof per review
+- Only the review owner can upload
+- Upload allowed only while review status is PENDING
+- Admin approval implicitly verifies the proof
+- Rejection keeps the file for audit but clears `verified` flag

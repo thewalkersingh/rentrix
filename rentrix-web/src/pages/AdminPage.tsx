@@ -1,22 +1,42 @@
-import { AlertCircle, Check, Loader2, Star, X } from "lucide-react"
+import { AlertCircle, Check, FileText, Loader2, Star, X } from "lucide-react"
 import { usePendingReviews } from "@/features/reviews/hooks/usePendingReviews"
 import { useModerateReview } from "@/features/reviews/hooks/useModerateReview"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Link } from "react-router-dom"
+import { useState } from "react"
+import { reviewsApi } from "@/api/reviews"
+import { toast } from "sonner"
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+function formatDate(iso?: string | null) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
 }
 
 export default function AdminPage() {
   const { data, isLoading, isError, refetch } = usePendingReviews()
   const moderate = useModerateReview()
+  const [loadingProof, setLoadingProof] = useState<number | null>(null)
+
+  const openProof = async (reviewId: number) => {
+    setLoadingProof(reviewId)
+    try {
+      const { url } = await reviewsApi.getProofUrl(reviewId)
+      window.open(url, "_blank", "noopener,noreferrer")
+    } catch (err) {
+      toast.error("Failed to open proof")
+    } finally {
+      setLoadingProof(null)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -50,6 +70,7 @@ export default function AdminPage() {
             : `${pending.length} review${pending.length === 1 ? "" : "s"} awaiting moderation`}
         </p>
       </div>
+
       {pending.length === 0 && (
         <div className="rounded-lg border py-16 text-center text-muted-foreground">
           All caught up. 🎉
@@ -61,12 +82,21 @@ export default function AdminPage() {
           <Card key={r.id}>
             <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">
                     <Star className="mr-1 h-3 w-3 fill-current" />
                     {r.rating}/10
                   </Badge>
                   <span className="text-xs text-muted-foreground">by {r.userName}</span>
+                  {r.hasProof && (
+                    <Badge
+                      variant="outline"
+                      className="gap-1 border-amber-500/30 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-300"
+                    >
+                      <FileText className="h-3 w-3" />
+                      Has proof
+                    </Badge>
+                  )}
                 </div>
                 <Link
                   to={`/flats/${r.flatId}`}
@@ -75,13 +105,42 @@ export default function AdminPage() {
                   {r.flatAddress ?? `Flat #${r.flatId}`}
                 </Link>
               </div>
-              <span className="text-xs text-muted-foreground">{formatDate(r.createdAt)}</span>
+              <span className="text-xs text-muted-foreground">
+                {formatDate(r.createdAt ?? r.reviewDate) && (
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(r.createdAt ?? r.reviewDate)}
+                  </span>
+                )}
+              </span>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
                 <h3 className="leading-tight font-semibold">{r.title}</h3>
                 <p className="text-sm whitespace-pre-wrap text-muted-foreground">{r.content}</p>
               </div>
+
+              {/* Proof button */}
+              {r.hasProof && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openProof(r.id)}
+                  disabled={loadingProof === r.id}
+                >
+                  {loadingProof === r.id ? (
+                    <>
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                      Loading…
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="mr-1 h-4 w-4" />
+                      View proof
+                    </>
+                  )}
+                </Button>
+              )}
+
               <div className="flex gap-2">
                 <Button
                   size="sm"

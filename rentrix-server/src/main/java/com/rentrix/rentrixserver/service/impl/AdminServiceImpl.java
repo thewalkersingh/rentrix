@@ -36,13 +36,23 @@ public class AdminServiceImpl implements AdminService {
 			throw ApiException.badRequest("Cannot set status back to PENDING");
 		}
 		
-		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not " +
-																																	  "found"));
+		Review review = reviewRepository.findById(reviewId)
+												  .orElseThrow(() -> ApiException.notFound("Review not found"));
 		
 		review.setStatus(status);
+		
+		// If approving a review with proof, mark the proof as verified
+		if (status == ReviewStatus.APPROVED && review.getProofStorageKey() != null) {
+			review.setProofVerified(true);
+			log.info("Proof verified for review {}", reviewId);
+		} else if (status == ReviewStatus.REJECTED) {
+			// Rejecting removes verification but keeps the file for audit
+			review.setProofVerified(false);
+		}
+		
 		Review saved = reviewRepository.save(review);
 		
-		// If a review is approved and the flat is not yet visible, make it visible
+		// Auto-promote flat if first approved review
 		if (status == ReviewStatus.APPROVED && !review.getFlat().getVisible()) {
 			Flat flat = review.getFlat();
 			flat.setVisible(true);

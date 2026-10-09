@@ -4,11 +4,14 @@ import com.rentrix.rentrixserver.entity.constants.PropertyType;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
@@ -92,5 +95,10 @@ public class Flat extends BaseEntity {
 	
 	@Column(nullable = false)
 	private Boolean deleted = false;
+	
+	@OneToMany(mappedBy = "flat", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private List<FlatImage> images = new ArrayList<>();
 	
 }

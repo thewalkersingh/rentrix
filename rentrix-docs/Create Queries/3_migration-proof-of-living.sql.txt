@@ -1,0 +1,4 @@
+ALTER TABLE reviews ADD COLUMN proof_storage_key VARCHAR(500);
+ALTER TABLE reviews ADD COLUMN proof_content_type VARCHAR(100);
+ALTER TABLE reviews ADD COLUMN proof_uploaded_at TIMESTAMP;
+ALTER TABLE reviews ADD COLUMN proof_verified BOOLEAN NOT NULL DEFAULT FALSE;

@@ -40,4 +40,7 @@ public class FlatSummaryResponse {
 	private Double averageRating;
 	private Long reviewCount;
 	
+	// Primary image URL — populated via batch aggregate
+	private String primaryImageUrl;   // null if no images
+	
 }

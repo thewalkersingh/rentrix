@@ -16,6 +16,7 @@ public final class ReviewMapper {
 		dto.setContent(review.getContent());
 		dto.setRating(review.getRating());
 		dto.setStatus(review.getStatus() != null ? review.getStatus().name() : null);
+		dto.setCreatedAt(review.getCreatedAt());
 		
 		if (review.getUser() != null) {
 			dto.setUserId(review.getUser().getId());
@@ -27,6 +28,11 @@ public final class ReviewMapper {
 										 ? review.getFlat().getAddress().getAddressLine()
 										 : null);
 		}
+		
+		// v0.1.3 — proof of living
+		boolean hasProof = review.getProofStorageKey() != null;
+		dto.setHasProof(hasProof);
+		dto.setVerifiedStay(hasProof && Boolean.TRUE.equals(review.getProofVerified()));
 		
 		return dto;
 	}

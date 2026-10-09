@@ -4,39 +4,44 @@ import com.rentrix.rentrixserver.dto.common.AddressDto;
 import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
+import com.rentrix.rentrixserver.dto.response.FlatImageDto;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
 import com.rentrix.rentrixserver.dto.response.FlatSummaryResponse;
 import com.rentrix.rentrixserver.entity.Address;
 import com.rentrix.rentrixserver.entity.Flat;
+import com.rentrix.rentrixserver.entity.FlatImage;
+
+import java.util.Comparator;
+import java.util.List;
 
 public final class FlatMapper {
 	
 	private FlatMapper() {}
 	
 	// ── Entity → Response (detail) ─────────────────────────────────────────
-	
 	public static FlatResponse toResponse(Flat flat) {
 		if (flat == null) return null;
 		
-		FlatResponse.FlatResponseBuilder b = FlatResponse.builder()
-																		 .id(flat.getId())
-																		 .rent(flat.getRent())
-																		 .numberOfRooms(flat.getNumberOfRooms())
-																		 .area(flat.getArea())
-																		 .floorNumber(flat.getFloorNumber())
-																		 .totalFloors(flat.getTotalFloors())
-																		 .furnished(flat.getFurnished())
-																		 .bathrooms(flat.getBathrooms())
-																		 .parking(flat.getParking())
-																		 .availableFrom(flat.getAvailableFrom())
-																		 .propertyType(flat.getPropertyType())
-																		 .description(flat.getDescription())
-																		 .available(flat.getAvailable())
-																		 .address(toAddressDto(flat.getAddress()))
-																		 .verified(flat.getVerified())
-																		 .visible(flat.getVisible())
-																		 .createdAt(flat.getCreatedAt())
-																		 .updatedAt(flat.getUpdatedAt());
+		FlatResponse.FlatResponseBuilder b =
+			FlatResponse.builder()
+							.id(flat.getId())
+							.rent(flat.getRent())
+							.numberOfRooms(flat.getNumberOfRooms())
+							.area(flat.getArea())
+							.floorNumber(flat.getFloorNumber())
+							.totalFloors(flat.getTotalFloors())
+							.furnished(flat.getFurnished())
+							.bathrooms(flat.getBathrooms())
+							.parking(flat.getParking())
+							.availableFrom(flat.getAvailableFrom())
+							.propertyType(flat.getPropertyType())
+							.description(flat.getDescription())
+							.available(flat.getAvailable())
+							.address(toAddressDto(flat.getAddress()))
+							.verified(flat.getVerified())
+							.visible(flat.getVisible())
+							.createdAt(flat.getCreatedAt())
+							.updatedAt(flat.getUpdatedAt());
 		
 		if (flat.getOwner() != null) {
 			b.ownerId(flat.getOwner().getId())
@@ -46,8 +51,21 @@ public final class FlatMapper {
 			b.createdById(flat.getCreatedBy().getId())
 			 .createdByName(flat.getCreatedBy().getDisplayName());
 		}
-		
 		b.averageRating(null).reviewCount(null);
+		
+		// Populate images + primary URL
+		if (flat.getImages() != null && !flat.getImages().isEmpty()) {
+			List<FlatImage> active = flat.getImages().stream()
+												  .filter(img -> !Boolean.TRUE.equals(img.getDeleted()))
+												  .sorted(Comparator.comparing(FlatImage::getDisplayOrder))
+												  .toList();
+			b.images(toImageDtos(active));
+			b.primaryImageUrl(active.stream()
+											.filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+											.findFirst()
+											.map(FlatImage::getPublicUrl)
+											.orElse(active.isEmpty() ? null : active.get(0).getPublicUrl()));
+		}
 		return b.build();
 	}
 	
@@ -61,14 +79,26 @@ public final class FlatMapper {
 	}
 	
 	// ── Entity → Summary (list view) ───────────────────────────────────────
-	
 	public static FlatSummaryResponse toSummary(Flat flat) {
 		if (flat == null) return null;
 		
 		String city = flat.getAddress() != null ? flat.getAddress().getCity() : null;
 		String state = flat.getAddress() != null ? flat.getAddress().getState() : null;
 		String addressLine = flat.getAddress() != null ? flat.getAddress().getAddressLine() : null;
-		
+		// Primary image URL for the card
+		String primaryImageUrl = null;
+		if (flat.getImages() != null) {
+			primaryImageUrl = flat.getImages().stream()
+										 .filter(img -> !Boolean.TRUE.equals(img.getDeleted()))
+										 .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+										 .findFirst()
+										 .map(FlatImage::getPublicUrl)
+										 .orElseGet(() -> flat.getImages().stream()
+																	 .filter(img -> !Boolean.TRUE.equals(img.getDeleted()))
+																	 .findFirst()
+																	 .map(FlatImage::getPublicUrl)
+																	 .orElse(null));
+		}
 		return FlatSummaryResponse.builder()
 										  .id(flat.getId())
 										  .rent(flat.getRent())
@@ -87,6 +117,7 @@ public final class FlatMapper {
 										  .visible(flat.getVisible())
 										  .averageRating(null)
 										  .reviewCount(null)
+										  .primaryImageUrl(primaryImageUrl)
 										  .build();
 	}
 	
@@ -100,7 +131,6 @@ public final class FlatMapper {
 	}
 	
 	// ── Request → Entity ───────────────────────────────────────────────────
-	
 	public static Flat toEntity(CreateFlatRequest req) {
 		if (req == null) return null;
 		Flat flat = new Flat();
@@ -121,7 +151,7 @@ public final class FlatMapper {
 		flat.setAvailableFrom(req.getAvailableFrom());
 		flat.setPropertyType(req.getPropertyType());
 		flat.setDescription(req.getDescription());
-		flat.setAvailable(req.getAvailable() != null ? req.getAvailable() : true);
+		flat.setAvailable(req.getAvailable() == null || req.getAvailable());
 		flat.setAddress(toAddressEntity(req.getAddress()));
 	}
 	
@@ -150,7 +180,6 @@ public final class FlatMapper {
 	}
 	
 	// ── Address helpers ────────────────────────────────────────────────────
-	
 	private static AddressDto toAddressDto(Address a) {
 		if (a == null) return null;
 		return AddressDto.builder()
@@ -179,6 +208,24 @@ public final class FlatMapper {
 		if (src.getCity() != null) target.setCity(src.getCity());
 		if (src.getState() != null) target.setState(src.getState());
 		if (src.getZipCode() != null) target.setZipCode(src.getZipCode());
+	}
+	
+	// ── Image helpers ─────────────────────────────────────────────────────
+	public static FlatImageDto toImageDto(FlatImage image) {
+		if (image == null) return null;
+		return FlatImageDto.builder()
+								 .id(image.getId())
+								 .url(image.getPublicUrl())
+								 .displayOrder(image.getDisplayOrder())
+								 .isPrimary(image.getIsPrimary())
+								 .build();
+	}
+	
+	public static List<FlatImageDto> toImageDtos(List<FlatImage> images) {
+		if (images == null) return List.of();
+		return images.stream()
+						 .map(FlatMapper::toImageDto)
+						 .toList();
 	}
 	
 }
