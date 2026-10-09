@@ -210,3 +210,51 @@ AWS_PUBLIC_URL=https://rentrix-media.s3.ap-south-1.amazonaws.com
 ```
 
 **Do not commit `.env`.** In prod, Render environment variables.
+
+### Proof of Living
+
+Reviews can optionally include proof that the tenant lived at the flat.
+Documents are stored in **`rentrix-private`** (not public).
+
+#### Storage layout
+```
+rentrix-private/
+└── reviews/{reviewId}/{uuid}.{pdf|jpg}
+
+```
+
+
+#### Pipeline
+
+1. **Upload** — `POST /reviews/{reviewId}/proof` (owner only, PENDING only)
+2. **Validate** — PDF, JPG, PNG, WebP; max 20 MB
+3. **Process**
+   - PDF → passed through unchanged
+   - Images → Thumbnailator: EXIF stripped, max 2400px, JPEG output
+4. **Store** — private bucket, no public URL
+5. **Verify** — admin approves the review → `proof_verified = true`
+6. **Display** — public reviews show "Verified stay" badge only after admin approval
+
+#### Access
+
+- Public visitors never see the file
+- Owner and admin get a **15-minute presigned URL** via `GET /reviews/{id}/proof-url`
+- URL expires automatically; no persistent links
+
+#### Lifecycle
+
+| State | proofStorageKey | proofVerified | Public badge |
+|---|---|---|---|
+| No proof | null | false | — |
+| Uploaded, pending | set | false | — |
+| Approved | set | true | "Verified stay" |
+| Rejected | set | false | — |
+| Deleted | null | false | — |
+
+#### Rules
+
+- One proof per review
+- Only the review owner can upload
+- Upload allowed only while review status is PENDING
+- Admin approval implicitly verifies the proof
+- Rejection keeps the file for audit but clears `verified` flag

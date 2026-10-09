@@ -75,3 +75,20 @@ Proof is:
 - Used to badge the review as "Verified stay"
 - Moderated alongside the review itself
 - Optional — reviews without proof still publish but show a subtler badge
+
+
+## v0.1.3 ✅ Shipped (YYYY-MM-DD)
+
+- [x] Privacy Policy and Terms of Service pages
+- [x] Flat images (S3, EXIF-stripped, gallery, lightbox)
+- [x] Proof-of-living upload with "Verified stay" badge
+- [ ] Bottom navigation on mobile → moved to v0.1.4
+- [ ] Better loading skeletons → moved to v0.1.4
+- [ ] Denormalized averageRating → moved to v0.1.4
+
+## v0.1.4 (next)
+- [ ] Prometheus + Grafana observability
+- [ ] Bottom navigation on mobile
+- [ ] Loading skeleton polish
+- [ ] Denormalize averageRating + reviewCount
+- [ ] SEO / OG meta tags
