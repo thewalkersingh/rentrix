@@ -1,4 +1,4 @@
-import { Star } from "lucide-react"
+import { BadgeCheck, Star } from "lucide-react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -38,8 +38,21 @@ export function ReviewCard({ review }: { review: Review }) {
             <AvatarFallback>{initials(review.userName)}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm font-medium">{review.userName}</p>
-            <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium">{review.userName}</p>
+              {review.verifiedStay && (
+                <Badge
+                  variant="outline"
+                  className="gap-1 border-green-500/30 bg-green-50 text-green-800 dark:bg-green-950/20 dark:text-green-300"
+                >
+                  <BadgeCheck className="h-3 w-3" />
+                  Verified stay
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatDate(review.createdAt ?? review.reviewDate)}
+            </p>
           </div>
         </div>
         <Badge className={ratingColor(review.rating)}>

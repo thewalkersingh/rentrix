@@ -15,4 +15,21 @@ export const reviewsApi = {
 
   moderate: (id: number, status: Exclude<ReviewStatus, "PENDING">): Promise<Review> =>
     api.patch(`/admin/reviews/${id}`, { status }).then((r) => r.data),
+
+  // ── Proof of living ─────────────────────────────────────────────────
+  uploadProof: (reviewId: number, file: File): Promise<void> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    return api
+      .post(`/reviews/${reviewId}/proof`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then(() => undefined)
+  },
+
+  getProofUrl: (reviewId: number): Promise<{ url: string }> =>
+    api.get(`/reviews/${reviewId}/proof-url`).then((r) => r.data),
+
+  deleteProof: (reviewId: number): Promise<void> =>
+    api.delete(`/reviews/${reviewId}/proof`).then(() => undefined),
 }

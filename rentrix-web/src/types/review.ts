@@ -9,11 +9,14 @@ export interface Review {
   title: string
   content: string
   rating: number
-  createdAt: string
-  updatedAt?: string
+  reviewDate?: string
+  createdAt?: string
   status: ReviewStatus
-}
 
+  // v0.1.3 — proof of living
+  hasProof?: boolean
+  verifiedStay?: boolean
+}
 export interface CreateReviewRequest {
   title: string
   content: string
