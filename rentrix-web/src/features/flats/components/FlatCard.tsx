@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { BedDouble, CalendarClock, MapPin, Ruler, Star } from "lucide-react"
+import { BedDouble, Building2, CalendarClock, MapPin, Ruler, Star } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -54,6 +54,22 @@ export function FlatCard({ flat }: { flat: FlatSummary }) {
         className="absolute inset-0 z-0"
         aria-label={`View ${locationLine(flat)}`}
       />
+
+      {/* Image */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
+        {flat.primaryImageUrl ? (
+          <img
+            src={flat.primaryImageUrl}
+            alt={locationLine(flat)}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+            <Building2 className="h-10 w-10 text-muted-foreground/40" />
+          </div>
+        )}
+      </div>
 
       <CardHeader className="space-y-1">
         <div className="flex items-start justify-between gap-2">

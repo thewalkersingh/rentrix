@@ -26,6 +26,8 @@ export interface FlatSummary {
   // Ratings (populated by Step 4)
   averageRating?: number | null
   reviewCount?: number | null
+
+  primaryImageUrl?: string | null
 }
 
 export interface Flat {
@@ -59,6 +61,9 @@ export interface Flat {
 
   createdAt: string
   updatedAt: string
+
+  images?: FlatImage[]
+  primaryImageUrl?: string | null
 }
 
 export interface FlatFilters {
@@ -97,5 +102,10 @@ export interface CreateFlatRequest {
   available?: boolean
   address: AddressDto
 }
-
+export interface FlatImage {
+   id: number
+   url: string
+   displayOrder: number
+   isPrimary: boolean
+}
 export type UpdateFlatRequest = Partial<CreateFlatRequest>
