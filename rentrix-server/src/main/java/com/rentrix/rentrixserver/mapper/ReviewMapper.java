@@ -16,6 +16,7 @@ public final class ReviewMapper {
 		dto.setContent(review.getContent());
 		dto.setRating(review.getRating());
 		dto.setStatus(review.getStatus() != null ? review.getStatus().name() : null);
+		dto.setCreatedAt(review.getCreatedAt());
 		
 		if (review.getUser() != null) {
 			dto.setUserId(review.getUser().getId());

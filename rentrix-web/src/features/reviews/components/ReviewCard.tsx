@@ -5,14 +5,16 @@ import { Badge } from "@/components/ui/badge"
 import type { Review } from "@/types"
 
 function initials(name: string | null | undefined) {
-   if (!name) return '?'
-   return name
-       .split(' ')
-       .map((p) => p[0])
-       .filter(Boolean)
-       .slice(0, 2)
-       .join('')
-       .toUpperCase() || '?'
+  if (!name) return "?"
+  return (
+    name
+      .split(" ")
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  )
 }
 
 function ratingColor(rating: number) {
@@ -21,12 +23,16 @@ function ratingColor(rating: number) {
   return "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400"
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+function formatDate(iso?: string) {
+  if (!iso) return ""
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime())
+    ? ""
+    : d.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
 }
 
 export function ReviewCard({ review }: { review: Review }) {
@@ -51,7 +57,11 @@ export function ReviewCard({ review }: { review: Review }) {
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {formatDate(review.createdAt ?? review.reviewDate)}
+              {formatDate(review.createdAt ?? review.reviewDate) && (
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(review.createdAt ?? review.reviewDate)}
+                </p>
+              )}
             </p>
           </div>
         </div>
