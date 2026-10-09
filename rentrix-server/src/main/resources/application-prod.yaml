@@ -26,10 +26,10 @@ spring:
       leak-detection-threshold: 60000   # Log leaked connections after 60s
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: validate                     # Use 'validate' in production
+      ddl-auto: validate
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         format_sql: false
