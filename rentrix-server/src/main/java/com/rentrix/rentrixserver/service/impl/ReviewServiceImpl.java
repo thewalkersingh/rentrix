@@ -13,7 +13,9 @@ import com.rentrix.rentrixserver.mapper.ReviewMapper;
 import com.rentrix.rentrixserver.repository.FlatRepository;
 import com.rentrix.rentrixserver.repository.ReviewRepository;
 import com.rentrix.rentrixserver.repository.UserRepository;
+import com.rentrix.rentrixserver.service.DocumentProcessingService;
 import com.rentrix.rentrixserver.service.ReviewService;
+import com.rentrix.rentrixserver.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -21,9 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -33,6 +37,8 @@ public class ReviewServiceImpl implements ReviewService {
 	private final ReviewRepository reviewRepository;
 	private final FlatRepository flatRepository;
 	private final UserRepository userRepository;
+	private final DocumentProcessingService documentProcessing;
+	private final StorageService storage;
 	
 	@Override
 	public PageResponse<ReviewDto> getAllReviews(Pageable pageable) {
@@ -114,18 +120,95 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 	
 	@Override
+	@Transactional
 	public void uploadProof(Long reviewId, MultipartFile file, Long requesterId) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		Review review = reviewRepository.findById(reviewId)
+												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		
+		// Only the review owner can upload
+		if (!review.getUser().getId().equals(requesterId)) {
+			throw ApiException.forbidden("You can only upload proof for your own reviews");
+		}
+		
+		// Only while PENDING — once approved/rejected, no changes
+		if (review.getStatus() != ReviewStatus.PENDING) {
+			throw ApiException.badRequest("Cannot upload proof after moderation");
+		}
+		
+		// Process and upload
+		var processed = documentProcessing.process(file);
+		
+		String uuid = UUID.randomUUID().toString();
+		String ext = "application/pdf".equals(processed.contentType()) ? "pdf" : "jpg";
+		String filename = uuid + "." + ext;
+		String prefix = "reviews/" + reviewId;
+		
+		String key = storage.uploadPrivate(
+			prefix, filename,
+			processed.bytes(),
+			processed.contentType(),
+			file.getOriginalFilename()
+		);
+		
+		// Delete old proof if replacing
+		if (review.getProofStorageKey() != null) {
+			storage.deletePrivate(review.getProofStorageKey());
+		}
+		
+		review.setProofStorageKey(key);
+		review.setProofContentType(processed.contentType());
+		review.setProofUploadedAt(LocalDateTime.now());
+		review.setProofVerified(false);   // reset verification on new upload
+		reviewRepository.save(review);
+		
+		log.info("Proof uploaded for review {}: key={}", reviewId, key);
 	}
 	
 	@Override
 	public String getProofUrl(Long reviewId, Long requesterId, boolean isAdmin) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		Review review = reviewRepository.findById(reviewId)
+												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		
+		if (review.getProofStorageKey() == null) {
+			throw ApiException.notFound("No proof uploaded for this review");
+		}
+		
+		// Only owner or admin
+		boolean isOwner = review.getUser().getId().equals(requesterId);
+		if (!isAdmin && !isOwner) {
+			throw ApiException.forbidden("You cannot view this proof");
+		}
+		
+		return storage.presignedPrivateUrl(review.getProofStorageKey(), 15);   // 15-minute URL
 	}
 	
 	@Override
+	@Transactional
 	public void deleteProof(Long reviewId, Long requesterId, boolean isAdmin) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		Review review = reviewRepository.findById(reviewId)
+												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		
+		boolean isOwner = review.getUser().getId().equals(requesterId);
+		if (!isAdmin && !isOwner) {
+			throw ApiException.forbidden("You cannot delete this proof");
+		}
+		
+		if (review.getProofStorageKey() == null) {
+			throw ApiException.notFound("No proof to delete");
+		}
+		
+		if (review.getStatus() != ReviewStatus.PENDING && !isAdmin) {
+			throw ApiException.badRequest("Cannot delete proof after moderation");
+		}
+		
+		storage.deletePrivate(review.getProofStorageKey());
+		review.setProofStorageKey(null);
+		review.setProofContentType(null);
+		review.setProofUploadedAt(null);
+		review.setProofVerified(false);
+		reviewRepository.save(review);
+		
+		log.info("Proof deleted for review {}", reviewId);
 	}
 	
 }

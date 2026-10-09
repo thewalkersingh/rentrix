@@ -6,10 +6,21 @@ import com.rentrix.rentrixserver.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+
+import java.time.Duration;
 
 @Slf4j
 @Service
@@ -60,11 +71,32 @@ public class S3StorageService implements StorageService {
 	
 	@Override
 	public String presignedPrivateUrl(String key, int expiryMinutes) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		try {
+			S3Presigner presigner = S3Presigner.builder()
+														  .region(Region.of(props.getRegion()))
+														  .credentialsProvider(credentialsProvider())
+														  .build();
+			
+			GetObjectRequest getRequest = GetObjectRequest.builder()
+																		 .bucket(props.getPrivateBucket())
+																		 .key(key)
+																		 .build();
+			
+			GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+																								 .signatureDuration(
+																									 Duration.ofMinutes(expiryMinutes))
+																								 .getObjectRequest(getRequest)
+																								 .build();
+			
+			PresignedGetObjectRequest presigned = presigner.presignGetObject(presignRequest);
+			return presigned.url().toString();
+		} catch (Exception e) {
+			log.error("Failed to generate presigned URL for key={}", key, e);
+			throw ApiException.badRequest("Failed to generate download link");
+		}
 	}
 	
 	// ── Internal helpers ──────────────────────────────────────────────────
-	
 	private String buildKey(String prefix, String filename) {
 		String cleanPrefix = prefix.replaceAll("^/+|/+$", "");
 		return cleanPrefix + "/" + filename;
@@ -101,6 +133,17 @@ public class S3StorageService implements StorageService {
 		} catch (Exception e) {
 			log.warn("S3 delete failed (non-fatal): bucket={}, key={}", bucket, key, e);
 		}
+	}
+	
+	// Returns an AWS credentials provider based on the configured access/secret keys, or the default provider chain if
+	// not set.
+	private AwsCredentialsProvider credentialsProvider() {
+		if (props.getAccessKey() != null && !props.getAccessKey().isBlank()
+				 && props.getSecretKey() != null && !props.getSecretKey().isBlank()) {
+			return StaticCredentialsProvider.create(
+				AwsBasicCredentials.create(props.getAccessKey(), props.getSecretKey()));
+		}
+		return DefaultCredentialsProvider.create();
 	}
 	
 }
