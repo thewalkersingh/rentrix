@@ -1,6 +1,6 @@
 package com.rentrix.rentrixserver.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -11,31 +11,26 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
+@RequiredArgsConstructor
 public class S3Config {
 	
-	@Value("${app.storage.s3.region}")
-	private String region;
-	
-	@Value("${app.storage.s3.access-key:}")
-	private String accessKey;
-	
-	@Value("${app.storage.s3.secret-key:}")
-	private String secretKey;
+	private final StorageProperties props;
 	
 	@Bean
 	public S3Client s3Client() {
 		AwsCredentialsProvider credentials;
-		if (accessKey != null && !accessKey.isBlank()
-				 && secretKey != null && !secretKey.isBlank()) {
-			credentials = StaticCredentialsProvider.create(
-				AwsBasicCredentials.create(accessKey, secretKey));
+		if (props.getAccessKey() != null && !props.getAccessKey().isBlank()
+				 && props.getSecretKey() != null && !props.getSecretKey().isBlank()) {
+			
+			credentials = StaticCredentialsProvider
+								  .create(AwsBasicCredentials.
+												 create(props.getAccessKey(), props.getSecretKey()));
 		} else {
-			// Fall back to env vars or IAM role (prod on Render/EC2)
 			credentials = DefaultCredentialsProvider.create();
 		}
 		
 		return S3Client.builder()
-							.region(Region.of(region))
+							.region(Region.of(props.getRegion()))
 							.credentialsProvider(credentials)
 							.build();
 	}
