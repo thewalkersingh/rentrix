@@ -1,0 +1,23 @@
+INSERT INTO user_details
+(id, first_name, last_name, telephone, date_of_birth,
+ address_line, street, city, state, zip_code,
+ created_at, updated_at)
+VALUES
+
+(1,'System','Admin','9000000001','1990-01-01',
+'Rentrix HQ','FC Road','Pune','Maharashtra','411005',NOW(),NOW()),
+
+(2,'Rahul','Patil','9000000002','1988-05-10',
+'Green Residency','Baner Road','Pune','Maharashtra','411045',NOW(),NOW()),
+
+(3,'Prakash','Sharma','9000000003','1985-09-18',
+'Sea View','Andheri West','Mumbai','Maharashtra','400053',NOW(),NOW()),
+
+(4,'Vikram','Reddy','9000000004','1987-07-21',
+'Tech Park Homes','Whitefield','Bengaluru','Karnataka','560066',NOW(),NOW()),
+
+(5,'Kiran','Rao','9000000005','1984-03-11',
+'Cyber Residency','Madhapur','Hyderabad','Telangana','500081',NOW(),NOW()),
+
+(6,'Amit','Verma','9000000006','1982-12-22',
+'Capital Enclave','Dwarka','Delhi','Delhi','110075',NOW(),NOW());
