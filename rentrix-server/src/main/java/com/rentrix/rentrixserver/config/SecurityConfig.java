@@ -68,8 +68,7 @@ public class SecurityConfig {
 								// Public: browse flats + read reviews
 								.requestMatchers(HttpMethod.GET, "/flats/me").authenticated()     // ← first
 								.requestMatchers(HttpMethod.GET, "/flats/*/reviews").permitAll()
-								.requestMatchers(HttpMethod.GET, "/flats/*").permitAll()
-								.requestMatchers(HttpMethod.GET, "/flats").permitAll()
+								.requestMatchers(HttpMethod.GET, "/flats/**").permitAll()
 								
 								// Public: docs + H2 console (dev only — remove before prod!)
 								.requestMatchers("/v3/api-docs/**",

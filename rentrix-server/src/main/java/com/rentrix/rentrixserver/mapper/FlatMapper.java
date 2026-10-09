@@ -11,6 +11,7 @@ import com.rentrix.rentrixserver.entity.Address;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.FlatImage;
 
+import java.util.Comparator;
 import java.util.List;
 
 public final class FlatMapper {
@@ -21,7 +22,7 @@ public final class FlatMapper {
 	public static FlatResponse toResponse(Flat flat) {
 		if (flat == null) return null;
 		
-		FlatResponse.FlatResponseBuilder flatResponseBuilder =
+		FlatResponse.FlatResponseBuilder b =
 			FlatResponse.builder()
 							.id(flat.getId())
 							.rent(flat.getRent())
@@ -43,16 +44,29 @@ public final class FlatMapper {
 							.updatedAt(flat.getUpdatedAt());
 		
 		if (flat.getOwner() != null) {
-			flatResponseBuilder.ownerId(flat.getOwner().getId())
-									 .ownerName(flat.getOwner().getDisplayName());
+			b.ownerId(flat.getOwner().getId())
+			 .ownerName(flat.getOwner().getDisplayName());
 		}
 		if (flat.getCreatedBy() != null) {
-			flatResponseBuilder.createdById(flat.getCreatedBy().getId())
-									 .createdByName(flat.getCreatedBy().getDisplayName());
+			b.createdById(flat.getCreatedBy().getId())
+			 .createdByName(flat.getCreatedBy().getDisplayName());
 		}
+		b.averageRating(null).reviewCount(null);
 		
-		flatResponseBuilder.averageRating(null).reviewCount(null);
-		return flatResponseBuilder.build();
+		// Populate images + primary URL
+		if (flat.getImages() != null && !flat.getImages().isEmpty()) {
+			List<FlatImage> active = flat.getImages().stream()
+												  .filter(img -> !Boolean.TRUE.equals(img.getDeleted()))
+												  .sorted(Comparator.comparing(FlatImage::getDisplayOrder))
+												  .toList();
+			b.images(toImageDtos(active));
+			b.primaryImageUrl(active.stream()
+											.filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+											.findFirst()
+											.map(FlatImage::getPublicUrl)
+											.orElse(active.isEmpty() ? null : active.get(0).getPublicUrl()));
+		}
+		return b.build();
 	}
 	
 	public static FlatResponse toResponse(Flat flat, RatingAggregate aggregate) {
@@ -71,7 +85,20 @@ public final class FlatMapper {
 		String city = flat.getAddress() != null ? flat.getAddress().getCity() : null;
 		String state = flat.getAddress() != null ? flat.getAddress().getState() : null;
 		String addressLine = flat.getAddress() != null ? flat.getAddress().getAddressLine() : null;
-		
+		// Primary image URL for the card
+		String primaryImageUrl = null;
+		if (flat.getImages() != null) {
+			primaryImageUrl = flat.getImages().stream()
+										 .filter(img -> !Boolean.TRUE.equals(img.getDeleted()))
+										 .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
+										 .findFirst()
+										 .map(FlatImage::getPublicUrl)
+										 .orElseGet(() -> flat.getImages().stream()
+																	 .filter(img -> !Boolean.TRUE.equals(img.getDeleted()))
+																	 .findFirst()
+																	 .map(FlatImage::getPublicUrl)
+																	 .orElse(null));
+		}
 		return FlatSummaryResponse.builder()
 										  .id(flat.getId())
 										  .rent(flat.getRent())
@@ -90,6 +117,7 @@ public final class FlatMapper {
 										  .visible(flat.getVisible())
 										  .averageRating(null)
 										  .reviewCount(null)
+										  .primaryImageUrl(primaryImageUrl)
 										  .build();
 	}
 	

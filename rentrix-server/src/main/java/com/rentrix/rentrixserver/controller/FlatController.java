@@ -3,19 +3,25 @@ package com.rentrix.rentrixserver.controller;
 import com.rentrix.rentrixserver.dto.filter.FlatFilterRequest;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
+import com.rentrix.rentrixserver.dto.response.FlatImageDto;
 import com.rentrix.rentrixserver.dto.response.FlatResponse;
 import com.rentrix.rentrixserver.dto.response.FlatSummaryResponse;
 import com.rentrix.rentrixserver.dto.response.PageResponse;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
+import com.rentrix.rentrixserver.service.FlatImageService;
 import com.rentrix.rentrixserver.service.FlatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/flats")
@@ -23,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class FlatController {
 	
 	private final FlatService flatService;
+	private final FlatImageService flatImageService;
 	
 	/** Public: list flats with optional filters. */
 	@GetMapping
@@ -74,6 +81,45 @@ public class FlatController {
 		boolean isAdmin = "ADMIN".equals(principal.getRole());
 		flatService.deleteFlat(id, principal.getId(), isAdmin);
 		return ResponseEntity.noContent().build();
+	}
+	
+	/** Public: list images for a flat. */
+	@GetMapping("/{id}/images")
+	public List<FlatImageDto> listImages(@PathVariable Long id) {
+		return flatImageService.listImages(id);
+	}
+	
+	/** Owner / creator / ADMIN: upload an image. */
+	@PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<FlatImageDto> uploadImage(
+		@PathVariable Long id,
+		@RequestParam("file") MultipartFile file,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		boolean isAdmin = "ADMIN".equals(principal.getRole());
+		FlatImageDto uploaded = flatImageService.uploadImage(id, file, principal.getId(), isAdmin);
+		return ResponseEntity.status(201).body(uploaded);
+	}
+	
+	/** Owner / creator / ADMIN: delete an image. */
+	@DeleteMapping("/{id}/images/{imageId}")
+	public ResponseEntity<Void> deleteImage(
+		@PathVariable Long id,
+		@PathVariable Long imageId,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		boolean isAdmin = "ADMIN".equals(principal.getRole());
+		flatImageService.deleteImage(id, imageId, principal.getId(), isAdmin);
+		return ResponseEntity.noContent().build();
+	}
+	
+	/** Owner / creator / ADMIN: mark an image as primary. */
+	@PatchMapping("/{id}/images/{imageId}/primary")
+	public ResponseEntity<FlatImageDto> setPrimaryImage(
+		@PathVariable Long id,
+		@PathVariable Long imageId,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		boolean isAdmin = "ADMIN".equals(principal.getRole());
+		FlatImageDto image = flatImageService.setPrimary(id, imageId, principal.getId(), isAdmin);
+		return ResponseEntity.ok(image);
 	}
 	
 }
