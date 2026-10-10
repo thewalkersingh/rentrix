@@ -12,7 +12,7 @@ export interface Review {
 
   reviewDate?: string
   createdAt?: string
-   
+
   status: ReviewStatus
 
   // v0.1.3 — proof of living
@@ -23,4 +23,13 @@ export interface CreateReviewRequest {
   title: string
   content: string
   rating: number
+}
+
+export interface ReviewProof {
+  id: number
+  originalFilename?: string
+  contentType: string
+  sizeBytes: number
+  displayOrder: number
+  verified: boolean
 }

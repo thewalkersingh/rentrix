@@ -57,7 +57,7 @@ export function ReviewForm({ flatId, onSuccess }: Props) {
 
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Proof of living (optional)</h3>
-          <ProofUploader reviewId={createdReview.id} hasProof={!!createdReview.hasProof} />
+          <ProofUploader reviewId={createdReview.id} />
         </div>
 
         <Separator />

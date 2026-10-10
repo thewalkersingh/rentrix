@@ -1,8 +1,20 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 import type { AxiosError } from "axios"
 import { reviewsApi } from "@/api/reviews"
 import { queryKeys } from "@/api/queryKeys"
+import { useAuthStore } from "@/features/auth/store"
+
+export function useReviewProofs(reviewId: number) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+
+  return useQuery({
+    queryKey: queryKeys.reviews.proof(reviewId),
+    queryFn: () => reviewsApi.listProofs(reviewId),
+    enabled: isAuthenticated && reviewId > 0,
+    staleTime: 1000 * 30,
+  })
+}
 
 export function useUploadProof(reviewId: number) {
   const qc = useQueryClient()
@@ -10,8 +22,9 @@ export function useUploadProof(reviewId: number) {
   return useMutation({
     mutationFn: (file: File) => reviewsApi.uploadProof(reviewId, file),
     onSuccess: async () => {
-      toast.success("Proof uploaded — pending review")
+      toast.success("Proof uploaded")
       await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.reviews.proof(reviewId) }),
         qc.invalidateQueries({ queryKey: queryKeys.reviews.mine }),
         qc.invalidateQueries({ queryKey: queryKeys.reviews.pending }),
       ])
@@ -26,10 +39,11 @@ export function useDeleteProof(reviewId: number) {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: () => reviewsApi.deleteProof(reviewId),
+    mutationFn: (proofId: number) => reviewsApi.deleteProof(reviewId, proofId),
     onSuccess: async () => {
       toast.success("Proof removed")
       await Promise.all([
+        qc.invalidateQueries({ queryKey: queryKeys.reviews.proof(reviewId) }),
         qc.invalidateQueries({ queryKey: queryKeys.reviews.mine }),
         qc.invalidateQueries({ queryKey: queryKeys.reviews.pending }),
       ])

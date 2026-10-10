@@ -1,4 +1,4 @@
-import type { CreateReviewRequest, Page, Review, ReviewStatus } from "@/types"
+import type { CreateReviewRequest, Page, Review, ReviewProof, ReviewStatus } from "@/types"
 import { api } from "./client"
 
 export const reviewsApi = {
@@ -16,20 +16,23 @@ export const reviewsApi = {
   moderate: (id: number, status: Exclude<ReviewStatus, "PENDING">): Promise<Review> =>
     api.patch(`/admin/reviews/${id}`, { status }).then((r) => r.data),
 
-  // ── Proof of living ─────────────────────────────────────────────────
-  uploadProof: (reviewId: number, file: File): Promise<void> => {
+  // ── Proofs of living ─────────────────────────────────────────────────
+  listProofs: (reviewId: number): Promise<ReviewProof[]> =>
+    api.get(`/reviews/${reviewId}/proofs`).then((r) => r.data),
+
+  uploadProof: (reviewId: number, file: File): Promise<ReviewProof> => {
     const formData = new FormData()
     formData.append("file", file)
     return api
-      .post(`/reviews/${reviewId}/proof`, formData, {
+      .post(`/reviews/${reviewId}/proofs`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
-      .then(() => undefined)
+      .then((r) => r.data)
   },
 
-  getProofUrl: (reviewId: number): Promise<{ url: string }> =>
-    api.get(`/reviews/${reviewId}/proof-url`).then((r) => r.data),
+  getProofUrl: (reviewId: number, proofId: number): Promise<{ url: string }> =>
+    api.get(`/reviews/${reviewId}/proofs/${proofId}/url`).then((r) => r.data),
 
-  deleteProof: (reviewId: number): Promise<void> =>
-    api.delete(`/reviews/${reviewId}/proof`).then(() => undefined),
+  deleteProof: (reviewId: number, proofId: number): Promise<void> =>
+    api.delete(`/reviews/${reviewId}/proofs/${proofId}`).then(() => undefined),
 }

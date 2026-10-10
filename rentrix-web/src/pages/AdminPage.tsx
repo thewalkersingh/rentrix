@@ -1,13 +1,14 @@
+import { useState } from "react"
+import { Link } from "react-router-dom"
 import { AlertCircle, Check, FileText, Loader2, Star, X } from "lucide-react"
+import { toast } from "sonner"
 import { usePendingReviews } from "@/features/reviews/hooks/usePendingReviews"
 import { useModerateReview } from "@/features/reviews/hooks/useModerateReview"
+import { reviewsApi } from "@/api/reviews"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Link } from "react-router-dom"
-import { useState } from "react"
-import { reviewsApi } from "@/api/reviews"
-import { toast } from "sonner"
+import type { ReviewProof } from "@/types"
 
 function formatDate(iso?: string | null) {
   if (!iso) return ""
@@ -24,17 +25,28 @@ function formatDate(iso?: string | null) {
 export default function AdminPage() {
   const { data, isLoading, isError, refetch } = usePendingReviews()
   const moderate = useModerateReview()
-  const [loadingProof, setLoadingProof] = useState<number | null>(null)
 
-  const openProof = async (reviewId: number) => {
-    setLoadingProof(reviewId)
+  const [proofsByReview, setProofsByReview] = useState<Record<number, ReviewProof[]>>({})
+  const [loadingProofId, setLoadingProofId] = useState<number | null>(null)
+
+  const loadProofs = async (reviewId: number) => {
     try {
-      const { url } = await reviewsApi.getProofUrl(reviewId)
+      const proofs = await reviewsApi.listProofs(reviewId)
+      setProofsByReview((prev) => ({ ...prev, [reviewId]: proofs }))
+    } catch {
+      toast.error("Failed to load proofs")
+    }
+  }
+
+  const openProof = async (reviewId: number, proofId: number) => {
+    setLoadingProofId(proofId)
+    try {
+      const { url } = await reviewsApi.getProofUrl(reviewId, proofId)
       window.open(url, "_blank", "noopener,noreferrer")
-    } catch (err) {
+    } catch {
       toast.error("Failed to open proof")
     } finally {
-      setLoadingProof(null)
+      setLoadingProofId(null)
     }
   }
 
@@ -78,89 +90,107 @@ export default function AdminPage() {
       )}
 
       <div className="space-y-4">
-        {pending.map((r) => (
-          <Card key={r.id}>
-            <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">
-                    <Star className="mr-1 h-3 w-3 fill-current" />
-                    {r.rating}/10
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">by {r.userName}</span>
-                  {r.hasProof && (
-                    <Badge
-                      variant="outline"
-                      className="gap-1 border-amber-500/30 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-300"
-                    >
-                      <FileText className="h-3 w-3" />
-                      Has proof
+        {pending.map((r) => {
+          const reviewProofs = proofsByReview[r.id]
+          const dateLabel = formatDate(r.createdAt ?? r.reviewDate)
+
+          return (
+            <Card key={r.id}>
+              <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">
+                      <Star className="mr-1 h-3 w-3 fill-current" />
+                      {r.rating}/10
                     </Badge>
-                  )}
+                    <span className="text-xs text-muted-foreground">by {r.userName}</span>
+                    {r.hasProof && (
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-amber-500/30 bg-amber-50 text-amber-800 dark:bg-amber-950/20 dark:text-amber-300"
+                      >
+                        <FileText className="h-3 w-3" />
+                        Has proof
+                      </Badge>
+                    )}
+                  </div>
+                  <Link
+                    to={`/flats/${r.flatId}`}
+                    className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+                  >
+                    {r.flatAddress ?? `Flat #${r.flatId}`}
+                  </Link>
                 </div>
-                <Link
-                  to={`/flats/${r.flatId}`}
-                  className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-                >
-                  {r.flatAddress ?? `Flat #${r.flatId}`}
-                </Link>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {formatDate(r.createdAt ?? r.reviewDate) && (
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(r.createdAt ?? r.reviewDate)}
-                  </span>
-                )}
-              </span>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <h3 className="leading-tight font-semibold">{r.title}</h3>
-                <p className="text-sm whitespace-pre-wrap text-muted-foreground">{r.content}</p>
-              </div>
+                {dateLabel && <span className="text-xs text-muted-foreground">{dateLabel}</span>}
+              </CardHeader>
 
-              {/* Proof button */}
-              {r.hasProof && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openProof(r.id)}
-                  disabled={loadingProof === r.id}
-                >
-                  {loadingProof === r.id ? (
-                    <>
-                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                      Loading…
-                    </>
-                  ) : (
-                    <>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <h3 className="leading-tight font-semibold">{r.title}</h3>
+                  <p className="text-sm whitespace-pre-wrap text-muted-foreground">{r.content}</p>
+                </div>
+
+                {/* Proof section */}
+                {r.hasProof && (
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadProofs(r.id)}
+                      disabled={!!reviewProofs}
+                    >
                       <FileText className="mr-1 h-4 w-4" />
-                      View proof
-                    </>
-                  )}
-                </Button>
-              )}
+                      {reviewProofs
+                        ? `${reviewProofs.length} proof${reviewProofs.length === 1 ? "" : "s"}`
+                        : "Load proofs"}
+                    </Button>
 
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => moderate.mutate({ id: r.id, status: "APPROVED" })}
-                  disabled={moderate.isPending}
-                >
-                  <Check className="mr-1 h-4 w-4" /> Approve
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => moderate.mutate({ id: r.id, status: "REJECTED" })}
-                  disabled={moderate.isPending}
-                >
-                  <X className="mr-1 h-4 w-4" /> Reject
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                    {reviewProofs?.map((p) => (
+                      <div
+                        key={p.id}
+                        className="flex items-center gap-2 rounded-md border bg-muted/30 p-2 text-xs"
+                      >
+                        <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        <span className="flex-1 truncate">{p.originalFilename ?? "proof"}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={() => openProof(r.id, p.id)}
+                          disabled={loadingProofId === p.id}
+                        >
+                          {loadingProofId === p.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            "Open"
+                          )}
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => moderate.mutate({ id: r.id, status: "APPROVED" })}
+                    disabled={moderate.isPending}
+                  >
+                    <Check className="mr-1 h-4 w-4" /> Approve
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => moderate.mutate({ id: r.id, status: "REJECTED" })}
+                    disabled={moderate.isPending}
+                  >
+                    <X className="mr-1 h-4 w-4" /> Reject
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </section>
   )
