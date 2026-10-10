@@ -1,0 +1,218 @@
+INSERT INTO flats
+(id,rent,number_of_rooms,area,floor_number,total_floors,
+furnished,bathrooms,parking,available_from,
+property_type,description,available,
+address_line,street,city,state,zip_code,
+owner_id,created_by,verified,visible,deleted,
+created_at,updated_at)
+VALUES
+
+(1,15000,1,450,1,5,true,1,true,'2026-10-01',
+'ROOM','Room near IT Park',true,
+'A101 Green Heights','Baner Road','Pune','Maharashtra','411045',
+2,2,true,true,false,NOW(),NOW()),
+
+(2,22000,2,780,4,12,true,2,true,'2026-10-05',
+'APARTMENT','Modern apartment in Wakad',true,
+'B204 Orchid Towers','Wakad','Pune','Maharashtra','411057',
+2,2,true,true,false,NOW(),NOW()),
+
+(3,27000,3,1100,6,14,true,2,true,'2026-10-12',
+'APARTMENT','Family apartment',true,
+'C603 Elite Homes','Balewadi','Pune','Maharashtra','411045',
+2,2,true,true,false,NOW(),NOW()),
+
+(4,12000,1,350,1,3,false,1,false,'2026-10-22',
+'PG','Budget PG',true,
+'D103 Student Hub','Shivajinagar','Pune','Maharashtra','411005',
+2,2,true,true,false,NOW(),NOW()),
+
+(5,35000,4,1800,2,2,true,3,true,'2026-11-01',
+'VILLA','Premium villa',true,
+'V12 Palm Villas','Bavdhan','Pune','Maharashtra','411021',
+2,2,true,true,false,NOW(),NOW()),
+
+(6,18000,2,700,3,9,true,1,true,'2026-09-29',
+'STUDIO','Furnished studio',true,
+'S302 Metro Towers','Viman Nagar','Pune','Maharashtra','411014',
+2,2,true,true,false,NOW(),NOW()),
+
+(7,25000,3,1200,4,11,true,2,true,'2026-10-10',
+'INDEPENDENT_HOUSE','Independent house',true,
+'H87 Urban Meadows','Kothrud','Pune','Maharashtra','411038',
+2,2,true,true,false,NOW(),NOW()),
+
+(8,9500,1,300,0,2,false,1,false,'2026-10-15',
+'HOSTEL','Single hostel room',true,
+'Hostel Block A','Karve Nagar','Pune','Maharashtra','411052',
+2,2,false,true,false,NOW(),NOW());
+
+INSERT INTO flats
+(id,rent,number_of_rooms,area,floor_number,total_floors,
+furnished,bathrooms,parking,available_from,
+property_type,description,available,
+address_line,street,city,state,zip_code,
+owner_id,created_by,verified,visible,deleted,
+created_at,updated_at)
+VALUES
+
+(9,45000,2,900,15,30,true,2,true,'2026-10-01',
+'APARTMENT','Andheri premium apartment',true,
+'A1504 Sky Heights','Andheri West','Mumbai','Maharashtra','400053',
+3,3,true,true,false,NOW(),NOW()),
+
+(10,52000,3,1300,18,35,true,3,true,'2026-10-20',
+'APARTMENT','Sea facing apartment',true,
+'S1802 Ocean View','Bandra West','Mumbai','Maharashtra','400050',
+3,3,true,true,false,NOW(),NOW()),
+
+(11,38000,2,820,7,18,true,2,true,'2026-10-11',
+'STUDIO','Business district studio',true,
+'C701 Corporate Hub','Powai','Mumbai','Maharashtra','400076',
+3,3,true,true,false,NOW(),NOW()),
+
+(12,90000,4,2200,20,40,true,4,true,'2026-11-01',
+'VILLA','Luxury villa',true,
+'V9 Golden Estate','Juhu','Mumbai','Maharashtra','400049',
+3,3,true,true,false,NOW(),NOW()),
+
+(13,22000,1,450,2,7,false,1,false,'2026-09-30',
+'ROOM','Affordable rental',true,
+'R202 City Apartments','Mira Road','Mumbai','Maharashtra','401107',
+3,3,true,true,false,NOW(),NOW()),
+
+(14,30000,2,750,6,14,true,2,true,'2026-10-15',
+'PG','Premium PG',true,
+'PG Block A','Navi Mumbai','Mumbai','Maharashtra','400706',
+3,3,true,true,false,NOW(),NOW());
+
+
+INSERT INTO flats
+(id,rent,number_of_rooms,area,floor_number,total_floors,
+furnished,bathrooms,parking,available_from,
+property_type,description,available,
+address_line,street,city,state,zip_code,
+owner_id,created_by,verified,visible,deleted,
+created_at,updated_at)
+VALUES
+
+(15,28000,2,850,5,12,true,2,true,'2026-10-01',
+'APARTMENT','Modern apartment near tech parks',true,
+'A504 Tech Residency','Whitefield','Bengaluru','Karnataka','560066',
+4,4,true,true,false,NOW(),NOW()),
+
+(16,18000,1,500,2,8,true,1,false,'2026-10-10',
+'STUDIO','Furnished studio for professionals',true,
+'S201 Corporate Homes','Marathahalli','Bengaluru','Karnataka','560037',
+4,4,true,true,false,NOW(),NOW()),
+
+(17,45000,3,1600,1,2,true,3,true,'2026-11-01',
+'VILLA','Premium gated villa',true,
+'V22 Prestige Villas','Sarjapur','Bengaluru','Karnataka','562125',
+4,4,true,true,false,NOW(),NOW()),
+
+(18,11000,1,320,0,3,false,1,false,'2026-10-15',
+'HOSTEL','Student hostel accommodation',true,
+'H12 Student Block','Electronic City','Bengaluru','Karnataka','560100',
+4,4,false,true,false,NOW(),NOW()),
+
+(19,22000,2,780,4,10,true,2,true,'2026-10-21',
+'PG','Premium PG with meals',true,
+'PG B102','Koramangala','Bengaluru','Karnataka','560034',
+4,4,true,true,false,NOW(),NOW()),
+
+(20,32000,3,1200,6,15,true,2,true,'2026-10-11',
+'INDEPENDENT_HOUSE','Independent family house',true,
+'I603 Elite Residency','HSR Layout','Bengaluru','Karnataka','560102',
+4,4,true,true,false,NOW(),NOW());
+
+
+INSERT INTO flats
+(id,rent,number_of_rooms,area,floor_number,total_floors,
+furnished,bathrooms,parking,available_from,
+property_type,description,available,
+address_line,street,city,state,zip_code,
+owner_id,created_by,verified,visible,deleted,
+created_at,updated_at)
+VALUES
+
+(21,24000,2,820,4,12,true,2,true,'2026-10-01',
+'APARTMENT','Cyber city apartment',true,
+'A401 Cyber Heights','Madhapur','Hyderabad','Telangana','500081',
+5,5,true,true,false,NOW(),NOW()),
+
+(22,15000,1,450,2,7,false,1,false,'2026-10-08',
+'ROOM','Budget room for professionals',true,
+'R202 Tech Homes','Gachibowli','Hyderabad','Telangana','500032',
+5,5,true,true,false,NOW(),NOW()),
+
+(23,38000,3,1450,8,16,true,3,true,'2026-10-20',
+'APARTMENT','Luxury apartment close to offices',true,
+'L803 Skyline Towers','Financial District','Hyderabad','Telangana','500032',
+5,5,true,true,false,NOW(),NOW()),
+
+(24,18500,1,600,1,5,true,1,true,'2026-10-18',
+'STUDIO','New studio apartment',true,
+'S102 Urban Living','Kondapur','Hyderabad','Telangana','500084',
+5,5,true,true,false,NOW(),NOW()),
+
+(25,55000,4,2200,1,2,true,4,true,'2026-11-10',
+'VILLA','Luxury villa with private garden',true,
+'V11 Royal Villas','Jubilee Hills','Hyderabad','Telangana','500033',
+5,5,true,true,false,NOW(),NOW());
+
+
+INSERT INTO flats
+(id,rent,number_of_rooms,area,floor_number,total_floors,
+furnished,bathrooms,parking,available_from,
+property_type,description,available,
+address_line,street,city,state,zip_code,
+owner_id,created_by,verified,visible,deleted,
+created_at,updated_at)
+VALUES
+
+(26,30000,2,950,5,12,true,2,true,'2026-10-01',
+'APARTMENT','Apartment in prime location',true,
+'A505 Capital Residency','Dwarka','Delhi','Delhi','110075',
+6,6,true,true,false,NOW(),NOW()),
+
+(27,45000,3,1400,10,20,true,3,true,'2026-10-10',
+'APARTMENT','Premium family apartment',true,
+'P1004 Metro Heights','Noida Sector 62','Noida','Uttar Pradesh','201309',
+6,6,true,true,false,NOW(),NOW()),
+
+(28,20000,1,520,2,8,true,1,false,'2026-10-15',
+'STUDIO','Furnished studio near metro',true,
+'S201 City Point','Gurugram Sector 56','Gurugram','Haryana','122011',
+6,6,true,true,false,NOW(),NOW()),
+
+(29,70000,4,2400,2,2,true,4,true,'2026-11-01',
+'VILLA','Luxury villa in gated society',true,
+'V25 Elite Villas','Greater Noida','Noida','Uttar Pradesh','201310',
+6,6,true,true,false,NOW(),NOW()),
+
+(30,26000,2,850,3,10,true,2,true,'2026-10-12',
+'PG','Premium shared accommodation',true,
+'PG Tower A','Saket','Delhi','Delhi','110017',
+6,6,true,true,false,NOW(),NOW());
+
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('A-101 Green Heights', '450.00', 1, '2026-10-01', 1, 'Pune', '2026-09-30 14:49:10.000000', '6', 0, 'Affordable room near IT park', 1, 1, '31', 1, '1', 1, 'ROOM', '12000.00', 'Maharashtra', 'Baner Road', 5, '2026-09-30 14:49:10.000000', 1, 1, '411045');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('B-203 Sky View', '750.00', 1, '2026-10-05', 1, 'Pune', '2026-09-30 14:49:10.000000', '8', 0, 'Modern apartment with balcony', 3, 1, '32', 2, '1', 1, 'APARTMENT', '18000.00', 'Maharashtra', 'Hinjewadi Phase 1', 10, '2026-09-30 14:49:10.000000', 1, 1, '411057');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('C-504 Orchid Residency', '900.00', 1, '2026-10-10', 2, 'Pune', '2026-09-30 14:49:10.000000', '3', 0, 'Family apartment close to offices', 5, 1, '33', 2, '2', 1, 'APARTMENT', '23000.00', 'Maharashtra', 'Wakad', 12, '2026-09-30 14:49:10.000000', 0, 1, '411057');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('D-102 Silver Nest', '500.00', 0, '2026-11-01', 1, 'Pune', '2026-09-30 14:49:10.000000', '5', 0, 'Budget PG accommodation', 2, 0, '34', 1, '2', 0, 'PG', '15000.00', 'Maharashtra', 'Aundh', 8, '2026-09-30 14:49:10.000000', 1, 1, '411007');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('E-703 Royal Residency', '1350.00', 1, '2026-10-15', 2, 'Pune', '2026-09-30 14:49:10.000000', '6', 0, 'Premium apartment with amenities', 7, 1, '35', 3, '3', 1, 'APARTMENT', '35000.00', 'Maharashtra', 'Kharadi', 15, '2026-09-30 14:49:10.000000', 1, 1, '411014');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('F-12 Sai Niwas', '320.00', 1, '2026-09-25', 1, 'Pune', '2026-09-30 14:49:10.000000', '2', 0, 'Single occupancy room', 0, 0, '36', 1, '1', 0, 'ROOM', '8500.00', 'Maharashtra', 'Karve Nagar', 3, '2026-09-30 14:49:10.000000', 0, 1, '411052');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('V-10 Palm Estate', '1800.00', 1, '2026-11-10', 3, 'Pune', '2026-09-30 14:49:10.000000', '3', 0, 'Luxury villa with parking', 10, 1, '37', 4, '3', 1, 'VILLA', '42000.00', 'Maharashtra', 'Magarpatta', 20, '2026-09-30 14:49:10.000000', 1, 1, '411028');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('S-401 Metro Towers', '850.00', 1, '2026-10-02', 2, 'Pune', '2026-09-30 14:49:10.000000', '1', 0, 'Studio apartment near metro', 4, 1, '38', 2, '1', 1, 'STUDIO', '21000.00', 'Maharashtra', 'Viman Nagar', 11, '2026-09-30 14:49:10.000000', 1, 1, '411014');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('A-202 Lake View', '780.00', 0, '2026-10-20', 2, 'Pune', '2026-09-30 14:49:10.000000', '8', 0, 'Ideal for working couples', 2, 1, '39', 2, '1', 0, 'APARTMENT', '19500.00', 'Maharashtra', 'Pimple Saudagar', 9, '2026-09-30 14:49:10.000000', 1, 1, '411027');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('T-602 Elite Homes', '1200.00', 1, '2026-10-12', 2, 'Pune', '2026-09-30 14:49:10.000000', '9', 0, 'Spacious 3BHK near schools', 6, 1, '40', 3, '2', 1, 'APARTMENT', '27000.00', 'Maharashtra', 'Balewadi', 14, '2026-09-30 14:49:10.000000', 1, 1, '411045');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('P-103 Student Hub', '550.00', 1, '2026-10-22', 1, 'Pune', '2026-09-30 14:49:10.000000', '4', 0, 'Affordable PG for students', 1, 0, '41', 1, '1', 0, 'PG', '14000.00', 'Maharashtra', 'Shivajinagar', 4, '2026-09-30 14:49:10.000000', 1, 1, '411005');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('H-88 Green County', '1450.00', 0, '2026-10-01', 3, 'Pune', '2026-09-30 14:49:10.000000', '9', 0, 'Independent house with terrace', 8, 1, '42', 3, '2', 1, 'INDEPENDENT_HOUSE', '31000.00', 'Maharashtra', 'Kothrud', 16, '2026-09-30 14:49:10.000000', 0, 1, '411038');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('M-201 City Plaza', '650.00', 1, '2026-10-18', 1, 'Pune', '2026-09-30 14:49:10.000000', '2', 0, 'Compact apartment', 2, 0, '43', 2, '3', 1, 'APARTMENT', '16000.00', 'Maharashtra', 'Hadapsar', 7, '2026-09-30 14:49:10.000000', 1, 1, '411028');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('R-14 Happy Homes', '430.00', 1, '2026-11-01', 1, 'Pune', '2026-09-30 14:49:10.000000', '5', 0, 'Well maintained room', 1, 1, '44', 1, '5', 0, 'ROOM', '12500.00', 'Maharashtra', 'Warje', 5, '2026-09-30 14:49:10.000000', 1, 1, '411058');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('K-305 Tech Residency', '950.00', 1, '2026-10-14', 2, 'Pune', '2026-09-30 14:49:10.000000', '2', 0, 'Close to tech parks', 3, 1, '45', 2, '2', 1, 'APARTMENT', '22500.00', 'Maharashtra', 'Hinjewadi Phase 2', 10, '2026-09-30 14:49:10.000000', 1, 1, '411057');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('F-704 Harmony Homes', '1250.00', 1, '2026-10-28', 2, 'Pune', '2026-09-30 14:49:10.000000', '4', 0, 'Family friendly community', 7, 1, '46', 3, '3', 1, 'APARTMENT', '28000.00', 'Maharashtra', 'Ravet', 12, '2026-09-30 14:49:10.000000', 1, 1, '412101');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('B-8 Om Residency', '390.00', 1, '2026-09-30', 1, 'Pune', '2026-09-30 14:49:10.000000', '8', 0, 'Budget option for bachelors', 0, 0, '47', 1, '2', 0, 'PG', '11000.00', 'Maharashtra', 'Nigdi', 2, '2026-09-30 14:49:10.000000', 1, 1, '411044');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('V-21 Emerald Villas', '2100.00', 0, '2026-11-20', 4, 'Pune', '2026-09-30 14:49:10.000000', '8', 0, 'Premium villa with garden', 2, 1, '48', 4, '3', 1, 'VILLA', '48000.00', 'Maharashtra', 'Bavdhan', 2, '2026-09-30 14:49:10.000000', 1, 1, '411021');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('S-302 Prime Square', '700.00', 1, '2026-10-11', 1, 'Pune', '2026-09-30 14:49:10.000000', '4', 0, 'Fully furnished studio', 3, 1, '49', 2, '1', 1, 'STUDIO', '17000.00', 'Maharashtra', 'Wagholi', 8, '2026-09-30 14:49:10.000000', 1, 1, '412207');
+insert into `flats` (`address_line`, `area`, `available`, `available_from`, `bathrooms`, `city`, `created_at`, `created_by`, `deleted`, `description`, `floor_number`, `furnished`, `id`, `number_of_rooms`, `owner_id`, `parking`, `property_type`, `rent`, `state`, `street`, `total_floors`, `updated_at`, `verified`, `visible`, `zip_code`) values ('A-506 Urban Heights', '1150.00', 1, '2026-10-05', 2, 'Pune', '2026-09-30 14:49:10.000000', '2', 0, 'Well connected residential area', 5, 1, '50', 3, '2', 1, 'APARTMENT', '25000.00', 'Maharashtra', 'Undri', 13, '2026-09-30 14:49:10.000000', 1, 1, '411060');

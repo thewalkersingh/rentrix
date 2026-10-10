@@ -1,0 +1,27 @@
+src/
+├─ api/
+│  └─ mock/
+├─ components/
+│  ├─ ui/           ← shadcn (exists)
+│  ├─ layout/
+│  └─ common/
+├─ features/
+│  ├─ auth/
+│  │  ├─ components/
+│  │  └─ hooks/
+│  ├─ flats/
+│  │  ├─ components/
+│  │  └─ hooks/
+│  └─ reviews/
+│     ├─ components/
+│     └─ hooks/
+├─ hooks/
+├─ lib/
+│  ├─ utils.ts      ← exists
+│  └─ env.ts        ← new
+├─ pages/
+├─ routes/
+├─ types/
+├─ App.tsx
+├─ main.tsx
+└─ index.css
