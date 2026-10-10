@@ -10,6 +10,8 @@ import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.FlatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -68,12 +70,20 @@ public class FlatController {
 		return ResponseEntity.ok(flatService.updateFlat(id, request, principal.getId(), isAdmin));
 	}
 	
+	/** Owner or ADMIN: soft-delete. */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteFlat(@PathVariable Long id,
 		@AuthenticationPrincipal CustomUserDetails principal) {
 		boolean isAdmin = "ADMIN".equals(principal.getRole());
 		flatService.deleteFlat(id, principal.getId(), isAdmin);
 		return ResponseEntity.noContent().build();
+	}
+	
+	@GetMapping("/debug/h2-console")
+	public Map<String, Object> debugH2(
+		@Value("${spring.h2.console.enabled:NOT_SET}") String enabled,
+		@Value("${spring.h2.console.path:NOT_SET}") String path) {
+		return Map.of("enabled", enabled, "path", path);
 	}
 	
 }

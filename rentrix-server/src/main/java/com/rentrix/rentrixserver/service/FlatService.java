@@ -33,3 +33,10 @@ public interface FlatService {
 	FlatResponse setVisible(Long id, boolean visible);
 	
 }
+/*
+Design:
+- createFlat takes ownerId explicitly — derived from the JWT by the controller
+- updateFlat / deleteFlat take requesterId + isAdmin so the service can enforce
+ownership without knowing about Spring Security
+- List returns FlatSummaryResponse (lighter payload)
+ */
