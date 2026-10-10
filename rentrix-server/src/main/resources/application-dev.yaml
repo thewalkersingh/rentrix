@@ -1,15 +1,33 @@
+# =============================================================================
+# Development Profile
+# =============================================================================
+#
+# Local Development:
+# - MySQL
+# - Swagger Enabled
+# - SQL Logging Enabled
+# - Relaxed Security Settings
+#
+# Activate:
+# SPRING_PROFILES_ACTIVE=dev
+#
+# =============================================================================
+
 server:
   # Bind to all interfaces so mobile devices on the same LAN can reach the API
   address: 0.0.0.0
 
-Spring:
+
+# -------------------- Spring Boot --------------------------------------------
+spring:
+
+  # -------------------- DataSource (MySQL) -----------------------------------
   datasource:
     # Connection URL with common parameters
     url: jdbc:mysql://localhost:3306/rentrix?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME:root}          # Environment variable with fallback
+    username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:admin}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
     hikari:
       pool-name: MySQLHikariPool
       maximum-pool-size: 20
@@ -19,23 +37,58 @@ Spring:
       max-lifetime: 1800000                # 30 minutes
       leak-detection-threshold: 60000      # 1 minute
 
-  # -------------------- JPA / Hibernate (MySQL) --------------------
+  # -------------------- JPA / Hibernate (MySQL) ------------------------------
   jpa:
-    hibernate:
-      ddl-auto: update                      # Use 'validate' in production
-    show-sql: true
     open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
         format_sql: false
+        jdbc:
+          time_zone: UTC
 
-# --- Dev-only Actuator override ----------------------------------------------
+  # --------------------  Jackson -------------------------------------------
+  jackson:
+    time-zone: UTC
+
+
+# --- Application-specific configuration --------------------------------------
+app:
+  # --- JWT configuration --------------------------------
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry-ms: 900000                # 15 minutes
+    refresh-token-expiry-ms: 604800000            # 7 days
+    # 10 MB
+
+  # --- CORS --------------------------------
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+
+
+# --- Logging ----------------------------------------------------------------
+logging:
+  level:
+    root: INFO
+    com.rentrix: DEBUG
+    # SQL Queries
+    org.hibernate.SQL: DEBUG
+    # Query Parameters
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.security: INFO
+
+
+# --- Dev-only Actuator -------------------------------------------------------
 management:
   endpoint:
     health:
       show-details: always
 
-# --- Swagger / OpenAPI (disabled in prod) ------------------------------------
+
+# --- Swagger / OpenAPI -------------------------------------------------------
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -43,11 +96,3 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
-
-# will use later
-app:
-  jwt:
-    secret: ${JWT_SECRET}
-    access-token-expiry-ms: 900000
-    refresh-token-expiry-ms: 604800000
-    # 10 MB

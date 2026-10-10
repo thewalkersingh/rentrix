@@ -1,9 +1,36 @@
-# Required env vars:
-#   DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET, MAIL_PASSWORD
-
-# Optional env vars:
-#   PORT, DB_POOL_MAX, DB_POOL_MIN, CORS_ORIGINS, JWT_ACCESS_EXPIRY,
-#   JWT_REFRESH_EXPIRY, MAIL_HOST, MAIL_PORT, MAIL_USERNAME
+# =============================================================================
+# application-prod.yaml
+# Production Configuration
+# =============================================================================
+#
+# Required Environment Variables
+#
+# Database
+# DB_HOST
+# DB_PORT
+# DB_NAME
+# DB_USERNAME
+# DB_PASSWORD
+#
+# JWT
+# JWT_SECRET
+#
+# AWS / S3
+# AWS_REGION
+# S3_PUBLIC_BUCKET
+# S3_PRIVATE_BUCKET
+#
+# Optional Environment Variables
+#
+# DB_POOL_MAX
+# DB_POOL_MIN
+# JWT_ACCESS_TOKEN_EXPIRY_MS
+# JWT_REFRESH_TOKEN_EXPIRY_MS
+# AWS_ACCESS_KEY_ID
+# AWS_SECRET_ACCESS_KEY
+# S3_PUBLIC_BASE_URL
+#
+# =============================================================================
 
 server:
   tomcat:
@@ -12,45 +39,106 @@ server:
     connection-timeout: 20000
 
 spring:
+
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=require
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=true&requireSSL=true&serverTimezone=UTC
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
     hikari:
       maximum-pool-size: ${DB_POOL_MAX:20}
       minimum-idle: ${DB_POOL_MIN:5}
       connection-timeout: 20000
       idle-timeout: 600000
       max-lifetime: 1800000
-      leak-detection-threshold: 60000   # Log leaked connections after 60s
 
   jpa:
+    open-in-view: false
+    show-sql: false
+
     hibernate:
       ddl-auto: validate
-    show-sql: true
-    open-in-view: false
+
     properties:
       hibernate:
         format_sql: false
 
-# --- JWT Secret --------------------------------
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+
+# =============================================================================
+# Application
+# =============================================================================
+
 app:
+
   jwt:
     secret: ${JWT_SECRET}
-    access-token-expiry-ms: 900000
-    refresh-token-expiry-ms: 604800000
+    access-token-expiry-ms: ${JWT_ACCESS_TOKEN_EXPIRY_MS:900000}
+    refresh-token-expiry-ms: ${JWT_REFRESH_TOKEN_EXPIRY_MS:604800000}
 
-# --- Actuator ---------------------------------------
+  cors:
+    allowed-origins:
+      - https://myrentrix.vercel.app
+      - https://*.vercel.app
+
+  storage:
+    s3:
+      region: ${AWS_REGION}
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+
+      public-bucket: ${S3_PUBLIC_BUCKET}
+      private-bucket: ${S3_PRIVATE_BUCKET}
+
+      public-base-url: ${S3_PUBLIC_BASE_URL:}
+
+# =============================================================================
+# Actuator
+# =============================================================================
+
 management:
+
   endpoints:
     web:
       exposure:
         include: health,info
+
   endpoint:
     health:
-      show-details: when_authorized    # "always", will triggers auth check
+      show-details: when_authorized
       show-components: when_authorized
+
   health:
     defaults:
       enabled: true
+
+  info:
+    env:
+      enabled: true
+
+# =============================================================================
+# OpenAPI / Swagger
+# =============================================================================
+
+springdoc:
+  api-docs:
+    enabled: false
+
+  swagger-ui:
+    enabled: false
+
+# =============================================================================
+# Logging
+# =============================================================================
+
+logging:
+  level:
+    root: INFO
+    com.rentrix: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

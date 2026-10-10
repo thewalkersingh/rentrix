@@ -1,12 +1,16 @@
+# --- Rentrix - Common Configuration ------------------------------------------------
 server:
   port: ${PORT:8080}
   servlet:
     context-path: /api/v1
 
+
+# --- Spring Boot Configuration ------------------------------------------------
 spring:
   # --- Application configuration ------------------------------------------------
   application:
     name: rentrix-server
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
@@ -22,6 +26,17 @@ spring:
     ansi:
       enabled: always
 
+  # --- Java Time / Jackson configuration ---------------------------------------------
+  jackson:
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+  # --- MVC configuration -------------------------------------------------------------
+  mvc:
+    problemDetails:
+      enabled: true
+
+
 # --- Actuator (lightweight health & metrics) -------------------------------
 management:
   endpoints:
@@ -29,30 +44,37 @@ management:
       base-path: /actuator
       exposure:
         include: health,info,metrics
+
   endpoint:
     health:
       show-details: when_authorized   # safer default; overridden to 'always' in dev
 
+
 # --- Logging -----------------------------------------------------------------
 logging:
   level:
-    root: WARN
+    root: INFO
     com.rentrix: INFO
     org.springframework.security: WARN
     org.hibernate: WARN
-    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR   # ✅ added
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
 
 
+# --- Application-specific configuration --------------------------------------
+# ---- AWS S3 Storage Configuration --------------------------------------
 app:
   storage:
     s3:
-      region: ${AWS_REGION:ap-south-1}
-      access-key: ${AWS_ACCESS_KEY:}
-      secret-key: ${AWS_SECRET_KEY:}
-      public-bucket: ${AWS_BUCKET:rentrix-media}
-      private-bucket: ${AWS_PRIVATE_BUCKET:rentrix-private}
-      public-base-url: ${AWS_PUBLIC_URL:}
+      region: ${AWS_REGION}
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+
+      public-bucket: ${AWS_BUCKET}
+      private-bucket: ${AWS_PRIVATE_BUCKET}
+
+      public-base-url: ${AWS_PUBLIC_URL}
       max-image-size-bytes: 10485760       # 10 MB
+
       allowed-image-types:
         - image/jpeg
         - image/png
