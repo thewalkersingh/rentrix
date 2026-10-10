@@ -82,10 +82,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					userDetails, null, userDetails.getAuthorities());
 			auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			SecurityContextHolder.getContext().setAuthentication(auth);
-			
+			log.debug("JWT authenticated userId={}", userId);
 			filterChain.doFilter(request, response);
 		} catch (Exception ex) {
-			log.debug("Failed to load user from token: {}", ex.getMessage());
+			log.warn("Authentication failed for JWT user lookup");
+			log.debug("Authentication failure details", ex);
 			SecurityContextHolder.clearContext();
 			writeUnauthorized(response, "Invalid token");
 		}

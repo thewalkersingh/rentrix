@@ -2,6 +2,7 @@ package com.rentrix.rentrixserver.entity;
 
 import com.rentrix.rentrixserver.entity.constants.Role;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -28,6 +29,8 @@ public class User extends BaseEntity implements UserDetails {
 	@Column(nullable = false)
 	private String password;
 	
+	@NotNull
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private Role role;
 	

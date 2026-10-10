@@ -35,6 +35,7 @@ public class SecurityConfig {
 	private final CustomUserDetailsService userDetailsService;
 	private final RestAuthenticationEntryPoint authenticationEntryPoint;
 	private final RestAccessDeniedHandler accessDeniedHandler;
+	private final CorsProperties corsProperties;
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -80,6 +81,8 @@ public class SecurityConfig {
 									"/swagger-resources/**",
 									"/webjars/**",
 									"/h2-console/**").permitAll()
+								
+								// Public: health check
 								.requestMatchers("/actuator/health").permitAll()
 								
 								// Admin-only
@@ -103,10 +106,7 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
-		config.setAllowedOriginPatterns(
-			List.of("http://localhost:5173", "https://myrentrix.vercel.app",
-				"https://*.vercel.app"          // ← covers every preview URL
-			));
+		config.setAllowedOriginPatterns(corsProperties.getAllowedOrigins());
 		config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		config.setAllowedHeaders(List.of("*"));
 		config.setAllowCredentials(true);
