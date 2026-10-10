@@ -19,14 +19,16 @@ public class S3Config {
 	@Bean
 	public S3Client s3Client() {
 		AwsCredentialsProvider credentials;
-		if (props.getAccessKey() != null && !props.getAccessKey().isBlank()
-				 && props.getSecretKey() != null && !props.getSecretKey().isBlank()) {
+		
+		if (props.getAccessKey() != null &&
+				 !props.getAccessKey().isBlank() &&
+				 props.getSecretKey() != null &&
+				 !props.getSecretKey().isBlank()) {
 			
 			credentials = StaticCredentialsProvider
-								  .create(AwsBasicCredentials.
-												 create(props.getAccessKey(), props.getSecretKey()));
+								  .create(AwsBasicCredentials.create(props.getAccessKey(), props.getSecretKey()));
 		} else {
-			credentials = DefaultCredentialsProvider.create();
+			credentials = DefaultCredentialsProvider.builder().build();
 		}
 		
 		return S3Client.builder()

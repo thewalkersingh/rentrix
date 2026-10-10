@@ -20,6 +20,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Administrative review moderation service.
+ * <p>
+ * Responsibilities:
+ * - Retrieve reviews by status
+ * - Approve reviews
+ * - Reject reviews
+ * - Verify/unverify review proofs
+ * - Auto-promote associated flats
+ * <p>
+ * Business Rules:
+ * - Reviews cannot be reverted to PENDING
+ * - Approved reviews verify associated proofs
+ * - Rejected reviews unverify associated proofs
+ * - First approved review can automatically make a flat visible
+ * <p>
+ * Security:
+ * - Accessible only to ADMIN users through AdminController
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,43 +50,59 @@ public class AdminServiceImpl implements AdminService {
 	
 	@Override
 	public PageResponse<ReviewDto> getReviewsByStatus(ReviewStatus status, Pageable pageable) {
-		return PageResponse.from(reviewRepository.findByStatus(status, pageable), (ReviewMapper::toDto));
+		
+		log.debug("Fetching reviews for moderation queue. status={}, page={}, size={}", status, pageable.getPageNumber(),
+			pageable.getPageSize());
+		
+		return PageResponse.from(reviewRepository.findByStatus(status, pageable), ReviewMapper::toDto);
 	}
 	
 	@Override
 	@Transactional
 	public ReviewDto moderate(Long reviewId, ReviewStatus status) {
+		
+		log.info("Review moderation requested. reviewId={}, targetStatus={}", reviewId, status);
+		
 		if (status == ReviewStatus.PENDING) {
+			log.warn("Rejected illegal status transition. reviewId={}, targetStatus={}", reviewId, status);
 			throw ApiException.badRequest("Cannot set status back to PENDING");
 		}
 		
-		Review review = reviewRepository.findById(reviewId)
-												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> {
+			log.warn("Attempt to moderate non-existing review. reviewId={}", reviewId);
+			return ApiException.notFound("Review not found");
+		});
 		
+		ReviewStatus previousStatus = review.getStatus();
+		log.debug("Review located. reviewId={}, currentStatus={}", reviewId, previousStatus);
 		review.setStatus(status);
+		List<ReviewProof> proofs = reviewProofRepository.findByReviewIdAndDeletedFalseOrderByDisplayOrderAsc(reviewId);
 		
-		// Verify or unverify all proofs on this review
-		List<ReviewProof> proofs = reviewProofRepository
-												.findByReviewIdAndDeletedFalseOrderByDisplayOrderAsc(reviewId);
+		if (proofs.isEmpty()) {
+			log.warn("Review {} contains no active proofs", reviewId);
+		}
 		
 		boolean verified = status == ReviewStatus.APPROVED;
+		log.debug("Found {} proof(s) for review {}. Setting verified={}", proofs.size(), reviewId, verified);
+		
 		for (ReviewProof proof : proofs) {
 			proof.setVerified(verified);
 		}
+		
 		reviewProofRepository.saveAll(proofs);
-		
 		Review saved = reviewRepository.save(review);
+		log.info("Review {} moderated successfully. {} -> {}", reviewId, previousStatus, status);
 		
-		// Auto-promote flat
 		if (status == ReviewStatus.APPROVED && !review.getFlat().getVisible()) {
 			Flat flat = review.getFlat();
 			flat.setVisible(true);
 			flatRepository.save(flat);
-			log.info("Flat {} promoted to visible after first approved review", flat.getId());
+			log.info("Flat {} auto-promoted to visible because review {} was approved", flat.getId(), reviewId);
 		}
 		
-		log.info("Moderated review {} → {} ({} proofs verified={})",
-			reviewId, status, proofs.size(), verified);
+		log.info("Proof moderation completed. reviewId={}, proofsProcessed={}, verified={}", reviewId, proofs.size(),
+			verified);
+		
 		return ReviewMapper.toDto(saved);
 	}
 	

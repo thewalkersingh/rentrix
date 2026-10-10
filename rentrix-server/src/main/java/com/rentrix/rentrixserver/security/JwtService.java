@@ -89,7 +89,7 @@ public class JwtService {
 			Claims claims = parseClaims(token);
 			return claims.getExpiration().after(new Date());
 		} catch (Exception ex) {
-			log.debug("Invalid JWT: {}", ex.getMessage());
+			log.debug("JWT validation failed: {}", ex.getClass().getSimpleName());
 			return false;
 		}
 	}

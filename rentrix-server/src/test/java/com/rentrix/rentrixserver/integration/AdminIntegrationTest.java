@@ -59,7 +59,7 @@ class AdminIntegrationTest extends BaseIntegrationTest {
 		User admin = testData.createAdmin();
 		Flat flat = testData.createVerifiedFlat(landlord);
 		
-		mockMvc.perform(delete("/admin/flats/{id}/visible", flat.getId())
+		mockMvc.perform(patch("/admin/flats/{id}/visible", flat.getId())
 								 .header("Authorization", auth.bearer(admin)))
 				 .andExpect(status().isOk())
 				 .andExpect(jsonPath("$.visible").value(false));

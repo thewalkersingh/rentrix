@@ -1,10 +1,19 @@
-# Activated via SPRING_PROFILES_ACTIVE=docker when running `docker compose up`
-
-# Assumes PostgreSQL container named "postgres" on the compose network.
-# All values are local-only throwaway credentials — never use in production
+# =============================================================================
+# application-docker.yaml
+# Activated via:
+#
+# SPRING_PROFILES_ACTIVE=docker
+#
+# For local Docker Compose development only.
+# Never use these credentials in production.
+# =============================================================================
 
 spring:
-  # --- DataSource (containerized Postgres) ----------------------------------
+
+  mvc:
+    problem-details:
+      enabled: true
+
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:rentrix}
     username: ${DB_USERNAME:rentrix}
@@ -19,44 +28,86 @@ spring:
       idle-timeout: 300000
       max-lifetime: 1800000
 
-  # --- JPA / Hibernate -------------------------------------------------
   jpa:
-    hibernate:
-      ddl-auto: update          # dev-friendly; never use in prod
-    show-sql: false
     open-in-view: false
+    show-sql: false
+
+    hibernate:
+      ddl-auto: update
+
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
 
-  # --- Jackson ------------------------------------------------------
+        jdbc:
+          time_zone: UTC
+
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+
   jackson:
+    time-zone: UTC
+
     default-property-inclusion: non_null
 
-# --- JWT configuration ------------------------------------------------
-# Local-only secret. Real deployments (Render prod) MUST use JWT_SECRET env var.
+# =============================================================================
+# Application
+# =============================================================================
 app:
+
   jwt:
     secret: ${JWT_SECRET:UtSmryGfnnxJiVHWYYiyyizEOK92De7npIL16owOeaF}
-    access-token-expiry-ms: 900000        # 15 minutes
-    refresh-token-expiry-ms: 604800000    # 7 days
 
-# --- Actuator --------------------------------------------------------
+    access-token-expiry-ms: ${JWT_ACCESS_TOKEN_EXPIRY_MS:900000}
+    refresh-token-expiry-ms: ${JWT_REFRESH_TOKEN_EXPIRY_MS:604800000}
+
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+
+  storage:
+    s3:
+      region: ${AWS_REGION:ap-south-1}
+
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+
+      public-bucket: ${S3_PUBLIC_BUCKET:rentrix-public}
+      private-bucket: ${S3_PRIVATE_BUCKET:rentrix-private}
+
+      public-base-url: ${S3_PUBLIC_BASE_URL:}
+
+# =============================================================================
+# Actuator
+# =============================================================================
 management:
+
   endpoints:
     web:
       exposure:
         include: health,info
+
   endpoint:
     health:
-      show-details: never    # "always", which triggers auth check
+      show-details: never
       show-components: when_authorized
+
   health:
     defaults:
       enabled: true
 
-# --- Swagger / OpenAPI (enabled for local exploration) ----------------
+  info:
+    env:
+      enabled: true
+
+# =============================================================================
+# Swagger / OpenAPI
+# =============================================================================
 springdoc:
   api-docs:
     enabled: true
@@ -64,10 +115,13 @@ springdoc:
     enabled: true
     path: /swagger-ui.html
 
-# --- Logging ------------------------------------------------------
+# =============================================================================
+# Logging
+# =============================================================================
 logging:
   level:
     root: INFO
     com.rentrix: DEBUG
     org.springframework.security: INFO
     org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
