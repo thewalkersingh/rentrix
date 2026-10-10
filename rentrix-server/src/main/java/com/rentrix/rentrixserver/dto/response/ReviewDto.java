@@ -18,9 +18,9 @@ public class ReviewDto {
 	private String status;
 	private LocalDateTime createdAt;
 	// v0.1.3 — proof of living
-	// true when proof uploaded AND verified
+	// true if review APPROVED and has ≥1 verified proof
 	private Boolean verifiedStay;
-	// true when proof uploaded (regardless of verification)
+	// true if review has ≥1 uploaded proof (any state)
 	private Boolean hasProof;
 	
 }

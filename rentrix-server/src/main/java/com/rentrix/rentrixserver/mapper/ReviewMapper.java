@@ -1,7 +1,12 @@
 package com.rentrix.rentrixserver.mapper;
 
 import com.rentrix.rentrixserver.dto.response.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.ReviewProofDto;
 import com.rentrix.rentrixserver.entity.Review;
+import com.rentrix.rentrixserver.entity.ReviewProof;
+import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
+
+import java.util.List;
 
 public final class ReviewMapper {
 	
@@ -30,9 +35,20 @@ public final class ReviewMapper {
 		}
 		
 		// v0.1.3 — proof of living
-		boolean hasProof = review.getProofStorageKey() != null;
+		// Proofs
+		List<ReviewProof> activeProofs = review.getProofs() == null
+														? List.of()
+														: review.getProofs().stream()
+																  .filter(p -> !Boolean.TRUE.equals(p.getDeleted()))
+																  .toList();
+		
+		boolean hasProof = !activeProofs.isEmpty();
+		boolean anyVerified = activeProofs.stream()
+													 .anyMatch(p -> Boolean.TRUE.equals(p.getVerified()));
+		
 		dto.setHasProof(hasProof);
-		dto.setVerifiedStay(hasProof && Boolean.TRUE.equals(review.getProofVerified()));
+		dto.setVerifiedStay(hasProof && anyVerified
+									  && review.getStatus() == ReviewStatus.APPROVED);
 		
 		return dto;
 	}
@@ -43,6 +59,23 @@ public final class ReviewMapper {
 			dto.setFlatAddress(flatAddress);
 		}
 		return dto;
+	}
+	
+	public static ReviewProofDto toProofDto(ReviewProof proof) {
+		if (proof == null) return null;
+		return ReviewProofDto.builder()
+									.id(proof.getId())
+									.originalFilename(proof.getOriginalFilename())
+									.contentType(proof.getContentType())
+									.sizeBytes(proof.getSizeBytes())
+									.displayOrder(proof.getDisplayOrder())
+									.verified(proof.getVerified())
+									.build();
+	}
+	
+	public static List<ReviewProofDto> toProofDtos(List<ReviewProof> proofs) {
+		if (proofs == null) return List.of();
+		return proofs.stream().map(ReviewMapper::toProofDto).toList();
 	}
 	
 }

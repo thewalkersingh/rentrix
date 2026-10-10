@@ -4,13 +4,17 @@ import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
 import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
 import com.rentrix.rentrixserver.dto.response.PageResponse;
 import com.rentrix.rentrixserver.dto.response.ReviewDto;
+import com.rentrix.rentrixserver.dto.response.ReviewProofDto;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
+import com.rentrix.rentrixserver.entity.ReviewProof;
 import com.rentrix.rentrixserver.entity.User;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
 import com.rentrix.rentrixserver.exception.ApiException;
+import com.rentrix.rentrixserver.exception.FileValidationException;
 import com.rentrix.rentrixserver.mapper.ReviewMapper;
 import com.rentrix.rentrixserver.repository.FlatRepository;
+import com.rentrix.rentrixserver.repository.ReviewProofRepository;
 import com.rentrix.rentrixserver.repository.ReviewRepository;
 import com.rentrix.rentrixserver.repository.UserRepository;
 import com.rentrix.rentrixserver.service.DocumentProcessingService;
@@ -23,8 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,11 +36,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 	
+	private static final int MAX_PROOFS_PER_REVIEW = 3;
+	
 	private final ReviewRepository reviewRepository;
+	private final ReviewProofRepository reviewProofRepository;
 	private final FlatRepository flatRepository;
 	private final UserRepository userRepository;
-	private final DocumentProcessingService documentProcessing;
 	private final StorageService storage;
+	private final DocumentProcessingService documentProcessing;
+	
+	// ── Existing review methods (unchanged, only rebuild DTO with proofs) ──
 	
 	@Override
 	public PageResponse<ReviewDto> getAllReviews(Pageable pageable) {
@@ -46,36 +53,26 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 	
 	@Override
-	public PageResponse<ReviewDto> getReviewsByFlat(Long flatId, Pageable pageable) {
-		return PageResponse.from(
-			reviewRepository.findByFlatIdAndStatus(flatId, ReviewStatus.APPROVED, pageable),
-			ReviewMapper::toDto
-		);
-	}
-	
-	@Override
-	public PageResponse<ReviewDto> getMyReviews(Long userId, Pageable pageable) {
-		return PageResponse.from(
-			reviewRepository.findByUserId(userId, pageable),
-			ReviewMapper::toDto
-		);
-	}
-	
-	@Override
 	public ReviewDto getReviewById(Long id) {
-		Review review = reviewRepository.findById(id)
-												  .orElseThrow(() -> ApiException.notFound("Review not found with id: " + id));
+		Review review =
+			reviewRepository.findById(id).orElseThrow(() -> ApiException.notFound("Review not found with id: " + id));
 		return ReviewMapper.toDto(review);
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public PageResponse<ReviewDto> getReviewsByFlat(Long flatId, Pageable pageable) {
+		return PageResponse.from(reviewRepository.findByFlatIdAndStatus(flatId, ReviewStatus.APPROVED, pageable),
+			ReviewMapper::toDto);
 	}
 	
 	@Override
 	@Transactional
 	public ReviewDto createReview(Long flatId, Long userId, CreateReviewRequest req) {
-		Flat flat = flatRepository.findById(flatId)
-										  .orElseThrow(() -> ApiException.notFound("Flat not found with id: " + flatId));
+		Flat flat =
+			flatRepository.findById(flatId).orElseThrow(() -> ApiException.notFound("Flat not found with id: " + flatId));
 		
-		User user = userRepository.findById(userId)
-										  .orElseThrow(() -> ApiException.notFound("User not found"));
+		User user = userRepository.findById(userId).orElseThrow(() -> ApiException.notFound("User not found"));
 		
 		Review review = new Review();
 		review.setFlat(flat);
@@ -87,8 +84,13 @@ public class ReviewServiceImpl implements ReviewService {
 		
 		Review saved = reviewRepository.save(review);
 		log.info("Review created: {} for flat {} by user {}", saved.getId(), flatId, userId);
-		
 		return ReviewMapper.toDto(saved);
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public PageResponse<ReviewDto> getMyReviews(Long userId, Pageable pageable) {
+		return PageResponse.from(reviewRepository.findByUserId(userId, pageable), ReviewMapper::toDto);
 	}
 	
 	@Override
@@ -103,13 +105,10 @@ public class ReviewServiceImpl implements ReviewService {
 	
 	@Override
 	public Map<Long, RatingAggregate> getRatingAggregates(List<Long> flatIds) {
-		if (flatIds == null || flatIds.isEmpty()) {
-			return Map.of();
-		}
+		if (flatIds == null || flatIds.isEmpty()) return Map.of();
 		
 		List<Object[]> rows = reviewRepository.findRatingAggregates(flatIds);
-		
-		Map<Long, RatingAggregate> result = new HashMap<>();
+		Map<Long, RatingAggregate> result = new java.util.HashMap<>();
 		for (Object[] row : rows) {
 			Long flatId = ((Number) row[0]).longValue();
 			Double avg = row[1] != null ? ((Number) row[1]).doubleValue() : null;
@@ -119,23 +118,26 @@ public class ReviewServiceImpl implements ReviewService {
 		return result;
 	}
 	
+	// ── Proof-of-living ───────────────────────────────────────────────────
+	
 	@Override
 	@Transactional
-	public void uploadProof(Long reviewId, MultipartFile file, Long requesterId) {
-		Review review = reviewRepository.findById(reviewId)
-												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+	public ReviewProofDto uploadProof(Long reviewId, MultipartFile file, Long requesterId) {
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not found"));
 		
-		// Only the review owner can upload
 		if (!review.getUser().getId().equals(requesterId)) {
 			throw ApiException.forbidden("You can only upload proof for your own reviews");
 		}
 		
-		// Only while PENDING — once approved/rejected, no changes
 		if (review.getStatus() != ReviewStatus.PENDING) {
 			throw ApiException.badRequest("Cannot upload proof after moderation");
 		}
 		
-		// Process and upload
+		long currentCount = reviewProofRepository.countByReviewIdAndDeletedFalse(reviewId);
+		if (currentCount >= MAX_PROOFS_PER_REVIEW) {
+			throw new FileValidationException("Maximum of " + MAX_PROOFS_PER_REVIEW + " proofs per review");
+		}
+		
 		var processed = documentProcessing.process(file);
 		
 		String uuid = UUID.randomUUID().toString();
@@ -143,72 +145,82 @@ public class ReviewServiceImpl implements ReviewService {
 		String filename = uuid + "." + ext;
 		String prefix = "reviews/" + reviewId;
 		
-		String key = storage.uploadPrivate(
-			prefix, filename,
-			processed.bytes(),
-			processed.contentType(),
-			file.getOriginalFilename()
-		);
+		String key = storage.uploadPrivate(prefix, filename, processed.bytes(), processed.contentType(),
+			file.getOriginalFilename());
 		
-		// Delete old proof if replacing
-		if (review.getProofStorageKey() != null) {
-			storage.deletePrivate(review.getProofStorageKey());
-		}
+		ReviewProof proof = new ReviewProof();
+		proof.setReview(review);
+		proof.setStorageKey(key);
+		proof.setOriginalFilename(file.getOriginalFilename());
+		proof.setContentType(processed.contentType());
+		proof.setSizeBytes((long) processed.bytes().length);
+		proof.setDisplayOrder((int) currentCount);
+		proof.setVerified(false);
 		
-		review.setProofStorageKey(key);
-		review.setProofContentType(processed.contentType());
-		review.setProofUploadedAt(LocalDateTime.now());
-		review.setProofVerified(false);   // reset verification on new upload
-		reviewRepository.save(review);
+		ReviewProof saved = reviewProofRepository.save(proof);
+		log.info("Proof uploaded for review {}: id={}, key={}", reviewId, saved.getId(), key);
 		
-		log.info("Proof uploaded for review {}: key={}", reviewId, key);
+		return ReviewMapper.toProofDto(saved);
 	}
 	
 	@Override
-	public String getProofUrl(Long reviewId, Long requesterId, boolean isAdmin) {
-		Review review = reviewRepository.findById(reviewId)
-												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+	public List<ReviewProofDto> listProofs(Long reviewId, Long requesterId, boolean isAdmin) {
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not found"));
 		
-		if (review.getProofStorageKey() == null) {
-			throw ApiException.notFound("No proof uploaded for this review");
+		boolean isOwner = review.getUser().getId().equals(requesterId);
+		if (!isAdmin && !isOwner) {
+			throw ApiException.forbidden("You cannot view proofs for this review");
 		}
 		
-		// Only owner or admin
+		return ReviewMapper.toProofDtos(
+			reviewProofRepository.findByReviewIdAndDeletedFalseOrderByDisplayOrderAsc(reviewId));
+	}
+	
+	@Override
+	public String getProofUrl(Long reviewId, Long proofId, Long requesterId, boolean isAdmin) {
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not found"));
+		
 		boolean isOwner = review.getUser().getId().equals(requesterId);
 		if (!isAdmin && !isOwner) {
 			throw ApiException.forbidden("You cannot view this proof");
 		}
 		
-		return storage.presignedPrivateUrl(review.getProofStorageKey(), 15);   // 15-minute URL
+		ReviewProof proof = reviewProofRepository.findByIdAndDeletedFalse(proofId)
+															  .orElseThrow(() -> ApiException.notFound("Proof not found"));
+		
+		if (!proof.getReview().getId().equals(reviewId)) {
+			throw ApiException.notFound("Proof does not belong to this review");
+		}
+		
+		return storage.presignedPrivateUrl(proof.getStorageKey(), 15);
 	}
 	
 	@Override
 	@Transactional
-	public void deleteProof(Long reviewId, Long requesterId, boolean isAdmin) {
-		Review review = reviewRepository.findById(reviewId)
-												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+	public void deleteProof(Long reviewId, Long proofId, Long requesterId, boolean isAdmin) {
+		Review review = reviewRepository.findById(reviewId).orElseThrow(() -> ApiException.notFound("Review not found"));
 		
 		boolean isOwner = review.getUser().getId().equals(requesterId);
 		if (!isAdmin && !isOwner) {
 			throw ApiException.forbidden("You cannot delete this proof");
 		}
 		
-		if (review.getProofStorageKey() == null) {
-			throw ApiException.notFound("No proof to delete");
-		}
-		
 		if (review.getStatus() != ReviewStatus.PENDING && !isAdmin) {
 			throw ApiException.badRequest("Cannot delete proof after moderation");
 		}
 		
-		storage.deletePrivate(review.getProofStorageKey());
-		review.setProofStorageKey(null);
-		review.setProofContentType(null);
-		review.setProofUploadedAt(null);
-		review.setProofVerified(false);
-		reviewRepository.save(review);
+		ReviewProof proof = reviewProofRepository.findByIdAndDeletedFalse(proofId)
+															  .orElseThrow(() -> ApiException.notFound("Proof not found"));
 		
-		log.info("Proof deleted for review {}", reviewId);
+		if (!proof.getReview().getId().equals(reviewId)) {
+			throw ApiException.notFound("Proof does not belong to this review");
+		}
+		
+		proof.setDeleted(true);
+		reviewProofRepository.save(proof);
+		storage.deletePrivate(proof.getStorageKey());
+		
+		log.info("Proof {} deleted from review {}", proofId, reviewId);
 	}
 	
 }

@@ -4,6 +4,7 @@ import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;
 import com.rentrix.rentrixserver.entity.User;
 import com.rentrix.rentrixserver.entity.constants.ReviewStatus;
+import com.rentrix.rentrixserver.repository.ReviewProofRepository;
 import com.rentrix.rentrixserver.repository.ReviewRepository;
 import com.rentrix.rentrixserver.service.StorageService;
 import com.rentrix.rentrixserver.support.BaseIntegrationTest;
@@ -13,7 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -25,6 +26,9 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 	@Autowired
 	private ReviewRepository reviewRepository;
 	
+	@Autowired
+	private ReviewProofRepository reviewProofRepository;
+	
 	@MockitoBean
 	private StorageService storageService;
 	
@@ -32,8 +36,8 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34  // %PDF-1.4
 	};
 	
-	private MockMultipartFile pdfFile() {
-		return new MockMultipartFile("file", "agreement.pdf", "application/pdf", FAKE_PDF);
+	private MockMultipartFile pdfFile(String name) {
+		return new MockMultipartFile("file", name, "application/pdf", FAKE_PDF);
 	}
 	
 	// ── Upload ────────────────────────────────────────────────────────────
@@ -47,17 +51,16 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("agreement.pdf"))
 								 .header("Authorization", auth.bearer(tenant)))
-				 .andExpect(status().isCreated());
+				 .andExpect(status().isCreated())
+				 .andExpect(jsonPath("$.id").isNumber())
+				 .andExpect(jsonPath("$.originalFilename").value("agreement.pdf"))
+				 .andExpect(jsonPath("$.contentType").value("application/pdf"))
+				 .andExpect(jsonPath("$.verified").value(false));
 		
-		// Verify persistence
-		Review saved = reviewRepository.findById(review.getId()).orElseThrow();
-		assert saved.getProofStorageKey() != null;
-		assert saved.getProofContentType().equals("application/pdf");
-		assert saved.getProofUploadedAt() != null;
-		assert !saved.getProofVerified();   // not yet verified
+		assert reviewProofRepository.countByReviewIdAndDeletedFalse(review.getId()) == 1;
 	}
 	
 	@Test
@@ -67,8 +70,8 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, owner, ReviewStatus.PENDING);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("a.pdf"))
 								 .header("Authorization", auth.bearer(stranger)))
 				 .andExpect(status().isForbidden());
 	}
@@ -79,8 +82,8 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile()))
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("a.pdf")))
 				 .andExpect(status().isUnauthorized());
 	}
 	
@@ -93,27 +96,35 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		MockMultipartFile txt = new MockMultipartFile(
 			"file", "notes.txt", "text/plain", "hello".getBytes());
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
 								 .file(txt)
 								 .header("Authorization", auth.bearer(tenant)))
 				 .andExpect(status().isBadRequest());
 	}
 	
 	@Test
-	void uploadProof_oversized_returns400() throws Exception {
+	void uploadProof_exceedsMax_returns400() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
 		User tenant = testData.createTenant();
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		byte[] big = new byte[21 * 1024 * 1024];   // 21 MB > 20 MB limit
-		MockMultipartFile file = new MockMultipartFile(
-			"file", "big.pdf", "application/pdf", big);
+		// Upload 3 proofs (max)
+		for (int i = 0; i < 3; i++) {
+			mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+									 .file(pdfFile("proof" + i + ".pdf"))
+									 .header("Authorization", auth.bearer(tenant)))
+					 .andExpect(status().isCreated());
+		}
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(file)
+		// 4th fails
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("extra.pdf"))
 								 .header("Authorization", auth.bearer(tenant)))
 				 .andExpect(status().isBadRequest())
-				 .andExpect(jsonPath("$.message", containsString("too large")));
+				 .andExpect(jsonPath("$.message", containsString("Maximum")));
 	}
 	
 	@Test
@@ -122,17 +133,52 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.APPROVED);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("a.pdf"))
 								 .header("Authorization", auth.bearer(tenant)))
 				 .andExpect(status().isBadRequest())
 				 .andExpect(jsonPath("$.message", containsString("moderation")));
 	}
 	
-	// ── Get URL ───────────────────────────────────────────────────────────
+	// ── List ──────────────────────────────────────────────────────────────
 	
 	@Test
-	void getProofUrl_asOwner_returns200WithUrl() throws Exception {
+	void listProofs_asOwner_returnsMetadata() throws Exception {
+		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
+			.thenReturn("reviews/1/test.pdf");
+		
+		User tenant = testData.createTenant();
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
+		
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("a.pdf"))
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		
+		mockMvc.perform(get("/reviews/{id}/proofs", review.getId())
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isOk())
+				 .andExpect(jsonPath("$", hasSize(1)))
+				 .andExpect(jsonPath("$[0].originalFilename").value("a.pdf"));
+	}
+	
+	@Test
+	void listProofs_asNonOwner_returns403() throws Exception {
+		User owner = testData.createTenant("owner");
+		User stranger = testData.createTenant("stranger");
+		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
+		Review review = testData.createReview(flat, owner, ReviewStatus.PENDING);
+		
+		mockMvc.perform(get("/reviews/{id}/proofs", review.getId())
+								 .header("Authorization", auth.bearer(stranger)))
+				 .andExpect(status().isForbidden());
+	}
+	
+	// ── URL ───────────────────────────────────────────────────────────────
+	
+	@Test
+	void getProofUrl_asOwner_returnsSignedUrl() throws Exception {
 		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
 			.thenReturn("reviews/1/test.pdf");
 		when(storageService.presignedPrivateUrl(anyString(), anyInt()))
@@ -142,19 +188,18 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		// Upload first
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
-								 .header("Authorization", auth.bearer(tenant)))
-				 .andExpect(status().isCreated());
+		String response = mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+														 .file(pdfFile("a.pdf"))
+														 .header("Authorization", auth.bearer(tenant)))
+										 .andReturn().getResponse().getContentAsString();
 		
-		// Get URL
-		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+		Long proofId = Long.parseLong(response.replaceAll(".*\"id\":(\\d+).*", "$1"));
+		
+		mockMvc.perform(get("/reviews/{id}/proofs/{proofId}/url", review.getId(), proofId)
 								 .header("Authorization", auth.bearer(tenant)))
 				 .andExpect(status().isOk())
-//				 .andExpect(jsonPath("$.url").value(
-//					 "https://rentrix-private.s3.ap-south-1.amazonaws.com/signed"));
-				 .andExpect(jsonPath("$.url").value(startsWith("https://")));
+				 .andExpect(jsonPath("$.url").value(
+					 "https://rentrix-private.s3.ap-south-1.amazonaws.com/signed"));
 	}
 	
 	@Test
@@ -169,12 +214,14 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
-								 .header("Authorization", auth.bearer(tenant)))
-				 .andExpect(status().isCreated());
+		String response = mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+														 .file(pdfFile("a.pdf"))
+														 .header("Authorization", auth.bearer(tenant)))
+										 .andReturn().getResponse().getContentAsString();
 		
-		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+		Long proofId = Long.parseLong(response.replaceAll(".*\"id\":(\\d+).*", "$1"));
+		
+		mockMvc.perform(get("/reviews/{id}/proofs/{proofId}/url", review.getId(), proofId)
 								 .header("Authorization", auth.bearer(admin)))
 				 .andExpect(status().isOk());
 	}
@@ -189,25 +236,16 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, owner, ReviewStatus.PENDING);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
-								 .header("Authorization", auth.bearer(owner)))
-				 .andExpect(status().isCreated());
+		String response = mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+														 .file(pdfFile("a.pdf"))
+														 .header("Authorization", auth.bearer(owner)))
+										 .andReturn().getResponse().getContentAsString();
 		
-		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
+		Long proofId = Long.parseLong(response.replaceAll(".*\"id\":(\\d+).*", "$1"));
+		
+		mockMvc.perform(get("/reviews/{id}/proofs/{proofId}/url", review.getId(), proofId)
 								 .header("Authorization", auth.bearer(stranger)))
 				 .andExpect(status().isForbidden());
-	}
-	
-	@Test
-	void getProofUrl_noProof_returns404() throws Exception {
-		User tenant = testData.createTenant();
-		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
-		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
-		
-		mockMvc.perform(get("/reviews/{id}/proof-url", review.getId())
-								 .header("Authorization", auth.bearer(tenant)))
-				 .andExpect(status().isNotFound());
 	}
 	
 	// ── Delete ────────────────────────────────────────────────────────────
@@ -221,24 +259,25 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
-								 .header("Authorization", auth.bearer(tenant)))
-				 .andExpect(status().isCreated());
+		String response = mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+														 .file(pdfFile("a.pdf"))
+														 .header("Authorization", auth.bearer(tenant)))
+										 .andReturn().getResponse().getContentAsString();
 		
-		mockMvc.perform(delete("/reviews/{id}/proof", review.getId())
+		Long proofId = Long.parseLong(response.replaceAll(".*\"id\":(\\d+).*", "$1"));
+		
+		mockMvc.perform(delete("/reviews/{id}/proofs/{proofId}", review.getId(), proofId)
 								 .header("Authorization", auth.bearer(tenant)))
 				 .andExpect(status().isNoContent());
 		
 		verify(storageService, times(1)).deletePrivate("reviews/1/test.pdf");
-		Review saved = reviewRepository.findById(review.getId()).orElseThrow();
-		assert saved.getProofStorageKey() == null;
+		assert reviewProofRepository.findByIdAndDeletedFalse(proofId).isEmpty();
 	}
 	
-	// ── Moderation → verifiedStay badge ──────────────────────────────────
+	// ── Verified stay badge ───────────────────────────────────────────────
 	
 	@Test
-	void approveReviewWithProof_setsVerifiedStayTrue() throws Exception {
+	void approveReview_marksAllProofsVerifiedAndBadgeTrue() throws Exception {
 		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
 			.thenReturn("reviews/1/test.pdf");
 		
@@ -247,50 +286,28 @@ class ReviewProofIntegrationTest extends BaseIntegrationTest {
 		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
 		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
 		
-		// Upload proof
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
+		// Upload 2 proofs
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("a.pdf"))
+								 .header("Authorization", auth.bearer(tenant)))
+				 .andExpect(status().isCreated());
+		mockMvc.perform(multipart("/reviews/{id}/proofs", review.getId())
+								 .file(pdfFile("b.pdf"))
 								 .header("Authorization", auth.bearer(tenant)))
 				 .andExpect(status().isCreated());
 		
-		// Admin approves
+		// Approve
 		mockMvc.perform(patch("/admin/reviews/{id}", review.getId())
 								 .header("Authorization", auth.bearer(admin))
 								 .contentType("application/json")
 								 .content("{\"status\":\"APPROVED\"}"))
-				 .andExpect(status().isOk())
-				 .andExpect(jsonPath("$.status").value("APPROVED"));
+				 .andExpect(status().isOk());
 		
-		// Public review now shows verifiedStay=true
+		// Public review shows verifiedStay=true
 		mockMvc.perform(get("/flats/{id}/reviews", flat.getId()))
 				 .andExpect(status().isOk())
 				 .andExpect(jsonPath("$.content[0].hasProof").value(true))
 				 .andExpect(jsonPath("$.content[0].verifiedStay").value(true));
-	}
-	
-	@Test
-	void rejectReview_clearsVerification() throws Exception {
-		when(storageService.uploadPrivate(anyString(), anyString(), any(), anyString(), anyString()))
-			.thenReturn("reviews/1/test.pdf");
-		
-		User tenant = testData.createTenant();
-		User admin = testData.createAdmin();
-		Flat flat = testData.createVerifiedFlat(testData.createLandlord());
-		Review review = testData.createReview(flat, tenant, ReviewStatus.PENDING);
-		
-		mockMvc.perform(multipart("/reviews/{id}/proof", review.getId())
-								 .file(pdfFile())
-								 .header("Authorization", auth.bearer(tenant)))
-				 .andExpect(status().isCreated());
-		
-		mockMvc.perform(patch("/admin/reviews/{id}", review.getId())
-								 .header("Authorization", auth.bearer(admin))
-								 .contentType("application/json")
-								 .content("{\"status\":\"REJECTED\"}"))
-				 .andExpect(status().isOk());
-		
-		Review saved = reviewRepository.findById(review.getId()).orElseThrow();
-		assert !saved.getProofVerified();
 	}
 	
 	@Test

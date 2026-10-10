@@ -76,4 +76,13 @@ public class GlobalExceptionHandler {
 					 .body(new ErrorResponse("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR.value()));
 	}
 	
+	// --------- File upload size ----------
+	@ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+	public ResponseEntity<ErrorResponse> handleMaxSize(
+		org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+		return ResponseEntity
+					 .status(HttpStatus.CONTENT_TOO_LARGE)
+					 .body(new ErrorResponse("File too large (max 15 MB)", 413));
+	}
+	
 }

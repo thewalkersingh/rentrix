@@ -4,14 +4,24 @@ server:
     context-path: /api/v1
 
 spring:
+  # --- Application configuration ------------------------------------------------
   application:
     name: rentrix-server
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
+  # --- File upload configuration ------------------------------------------------
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+
+  # --- Output configuration -----------------------------------------------------
   output:
     ansi:
       enabled: always
+
 # --- Actuator (lightweight health & metrics) -------------------------------
 management:
   endpoints:
@@ -25,7 +35,6 @@ management:
 
 # --- Logging -----------------------------------------------------------------
 logging:
-
   level:
     root: WARN
     com.rentrix: INFO

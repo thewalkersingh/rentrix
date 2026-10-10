@@ -1,5 +1,6 @@
 package com.rentrix.rentrixserver.controller;
 
+import com.rentrix.rentrixserver.dto.response.ReviewProofDto;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,30 +20,44 @@ public class ReviewProofController {
 	
 	private final ReviewService reviewService;
 	
-	@PostMapping(value = "/{reviewId}/proof", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<Void> uploadProof(
+	/** Owner: upload a proof file. Up to 3 per review, PENDING only. */
+	@PostMapping(value = "/{reviewId}/proofs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<ReviewProofDto> uploadProof(
 		@PathVariable Long reviewId,
 		@RequestParam("file") MultipartFile file,
 		@AuthenticationPrincipal CustomUserDetails principal) {
-		reviewService.uploadProof(reviewId, file, principal.getId());
-		return ResponseEntity.status(201).build();
+		ReviewProofDto proof = reviewService.uploadProof(reviewId, file, principal.getId());
+		return ResponseEntity.status(201).body(proof);
 	}
 	
-	@GetMapping("/{reviewId}/proof-url")
-	public ResponseEntity<Map<String, String>> getProofUrl(
+	/** Owner or ADMIN: list proofs (metadata only, no URLs). */
+	@GetMapping("/{reviewId}/proofs")
+	public List<ReviewProofDto> listProofs(
 		@PathVariable Long reviewId,
 		@AuthenticationPrincipal CustomUserDetails principal) {
 		boolean isAdmin = "ADMIN".equals(principal.getRole());
-		String url = reviewService.getProofUrl(reviewId, principal.getId(), isAdmin);
+		return reviewService.listProofs(reviewId, principal.getId(), isAdmin);
+	}
+	
+	/** Owner or ADMIN: get a 15-minute presigned URL for a specific proof. */
+	@GetMapping("/{reviewId}/proofs/{proofId}/url")
+	public ResponseEntity<Map<String, String>> getProofUrl(
+		@PathVariable Long reviewId,
+		@PathVariable Long proofId,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		boolean isAdmin = "ADMIN".equals(principal.getRole());
+		String url = reviewService.getProofUrl(reviewId, proofId, principal.getId(), isAdmin);
 		return ResponseEntity.ok(Map.of("url", url));
 	}
 	
-	@DeleteMapping("/{reviewId}/proof")
+	/** Owner or ADMIN: delete a proof. */
+	@DeleteMapping("/{reviewId}/proofs/{proofId}")
 	public ResponseEntity<Void> deleteProof(
 		@PathVariable Long reviewId,
+		@PathVariable Long proofId,
 		@AuthenticationPrincipal CustomUserDetails principal) {
 		boolean isAdmin = "ADMIN".equals(principal.getRole());
-		reviewService.deleteProof(reviewId, principal.getId(), isAdmin);
+		reviewService.deleteProof(reviewId, proofId, principal.getId(), isAdmin);
 		return ResponseEntity.noContent().build();
 	}
 	

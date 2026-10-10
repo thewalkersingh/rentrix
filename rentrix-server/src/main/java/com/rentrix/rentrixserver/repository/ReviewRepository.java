@@ -15,14 +15,20 @@ import java.util.List;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 	
-	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address"})
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address", "proofs"})
 	Page<Review> findByFlatIdAndStatus(Long flatId, ReviewStatus status, Pageable pageable);
 	
-	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address"})
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address", "proofs"})
 	Page<Review> findByUserId(Long userId, Pageable pageable);
 	
-	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address"})
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address", "proofs"})
 	Page<Review> findByStatus(ReviewStatus status, Pageable pageable);
+	
+	// use this method to fetch all reviews with relations for admin moderation, with pagination
+	// instead of findAll() which may cause N+1 problem
+	@EntityGraph(attributePaths = {"user", "user.userDetail", "flat", "flat.address", "proofs"})
+	@Query("SELECT r FROM Review r")
+	Page<Review> findAllWithRelations(Pageable pageable);
 	
 	/**
 	 * Batch aggregates for a set of flat IDs.
