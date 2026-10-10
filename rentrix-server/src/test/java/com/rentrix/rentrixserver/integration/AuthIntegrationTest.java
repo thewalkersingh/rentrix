@@ -20,7 +20,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
 	@Test
 	void signup_asTenant_returns201WithTokens() throws Exception {
 		SignupRequest req = new SignupRequest();
-		req.setName("New Tenant");
+//		req.setName("New Tenant");
 		req.setEmail("new-tenant@rentrix.test");
 		req.setPassword("password123");
 		req.setRole(Role.TENANT);
@@ -38,7 +38,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
 	@Test
 	void signup_withAdminRole_returns400() throws Exception {
 		SignupRequest req = new SignupRequest();
-		req.setName("Hacker");
+//		req.setName("Hacker");
 		req.setEmail("hacker@rentrix.test");
 		req.setPassword("password123");
 		req.setRole(Role.ADMIN);
@@ -55,7 +55,7 @@ class AuthIntegrationTest extends BaseIntegrationTest {
 		testData.createTenant();
 		
 		SignupRequest req = new SignupRequest();
-		req.setName("Dup");
+//		req.setName("Dup");
 		req.setEmail(testData.createTenant().getEmail()); // reuse same email
 		req.setPassword("password123");
 		req.setRole(Role.TENANT);

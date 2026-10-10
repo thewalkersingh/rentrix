@@ -20,6 +20,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumSet;
 import java.util.Set;
 
+/**
+ * Authentication endpoints.
+ * <p>
+ * Responsibilities:
+ * - User registration
+ * - User login
+ * - Access token refresh
+ * - Current user profile lookup
+ * - Logout
+ * <p>
+ * Authentication:
+ * - signup/login/refresh are public
+ * - me/logout require authentication
+ */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -44,22 +59,24 @@ public class AuthServiceImpl implements AuthService {
 		}
 		
 		User user = new User();
-		user.setEmail(request.getEmail());
+		user.setEmail(request.getEmail().trim().toLowerCase());
 		user.setPassword(passwordEncoder.encode(request.getPassword()));
 		user.setRole(request.getRole());
 		
 		User saved = userRepository.save(user);
-		log.info("User registered: {} ({})", saved.getEmail(), saved.getRole());
+		log.info("User registered. userId={}, email={}, role={}",
+			saved.getId(), saved.getEmail(), saved.getRole());
 		
 		return buildAuthResponse(saved);
 	}
 	
 	@Override
 	public AuthResponse login(LoginRequest request) {
-		User user = userRepository.findByEmail(request.getEmail())
+		User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
 										  .orElseThrow(() -> ApiException.unauthorized("Invalid credentials"));
 		
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+			log.warn("Failed login attempt for email={}", request.getEmail());
 			throw ApiException.unauthorized("Invalid credentials");
 		}
 		
@@ -69,6 +86,7 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Override
 	public String refresh(String refreshToken) {
+		log.debug("Refreshing access token");
 		if (!jwtService.isValid(refreshToken)) {
 			throw ApiException.unauthorized("Invalid or expired refresh token");
 		}
@@ -81,10 +99,10 @@ public class AuthServiceImpl implements AuthService {
 		Long userId = jwtService.extractUserId(refreshToken);
 		User user = userRepository.findById(userId)
 										  .orElseThrow(() -> ApiException.unauthorized("User no longer exists"));
+		log.info("Access token refreshed for userId={}", userId);
 		
-		return jwtService.generateAccessToken(
-			user.getId(), user.getEmail(), user.getRole().name()
-		);
+		return jwtService
+					 .generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
 	}
 	
 	@Override
