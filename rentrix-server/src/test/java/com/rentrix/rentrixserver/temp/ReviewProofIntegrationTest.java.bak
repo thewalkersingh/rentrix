@@ -1,4 +1,4 @@
-package com.rentrix.rentrixserver.integration;
+package com.rentrix.rentrixserver.temp;
 
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.Review;

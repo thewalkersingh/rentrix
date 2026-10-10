@@ -9,7 +9,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -49,18 +50,10 @@ public class Review extends BaseEntity {
 	
 	private Boolean deleted = false;
 	
-	// ── v0.1.3 — Proof of living ────────────────────────────────────────
-	
-	@Column(name = "proof_storage_key", length = 500)
-	private String proofStorageKey;
-	
-	@Column(name = "proof_content_type", length = 100)
-	private String proofContentType;
-	
-	@Column(name = "proof_uploaded_at")
-	private LocalDateTime proofUploadedAt;
-	
-	@Column(name = "proof_verified", nullable = false)
-	private Boolean proofVerified = false;
+	// v0.1.3 — proof of living
+	@OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
+	private List<ReviewProof> proofs = new ArrayList<>();
 	
 }
