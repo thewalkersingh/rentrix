@@ -1,5 +1,0 @@
-CREATE INDEX idx_reviews_user ON reviews(user_id);
-CREATE INDEX idx_reviews_flat ON reviews(flat_id);
-CREATE INDEX idx_rent_history_flat ON rent_history(flat_id);
-CREATE INDEX idx_rent_history_tenant ON rent_history(tenant_id);
-CREATE INDEX idx_rent_history_landlord ON rent_history(landlord_id);

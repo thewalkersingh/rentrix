@@ -1,8 +1,10 @@
 package com.rentrix.rentrixserver.service;
 
 import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
+import com.rentrix.rentrixserver.dto.request.CreateProofConfirmRequest;
 import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
 import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.PresignedUploadResponse;
 import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.dto.response.ReviewProofDto;
 import org.springframework.data.domain.Pageable;
@@ -51,5 +53,9 @@ public interface ReviewService {
 	 * Deletes a review's proof (before approval).
 	 */
 	void deleteProof(Long reviewId, Long proofId, Long requesterId, boolean isAdmin);
+	
+	PresignedUploadResponse presignProofUpload(Long reviewId, String filename, String contentType, long sizeBytes);
+	
+	ReviewProofDto confirmProofUpload(Long reviewId, CreateProofConfirmRequest req, Long requesterId);
 	
 }

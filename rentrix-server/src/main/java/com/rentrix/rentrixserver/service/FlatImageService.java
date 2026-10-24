@@ -1,5 +1,6 @@
 package com.rentrix.rentrixserver.service;
 
+import com.rentrix.rentrixserver.dto.request.CreateImageConfirmRequest;
 import com.rentrix.rentrixserver.dto.response.FlatImageDto;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,5 +15,9 @@ public interface FlatImageService {
 	void deleteImage(Long flatId, Long imageId, Long requesterId, boolean isAdmin);
 	
 	FlatImageDto setPrimary(Long flatId, Long imageId, Long requesterId, boolean isAdmin);
+	
+	void assertCanManageFlat(Long flatId, Long requesterId, boolean isAdmin);
+	
+	FlatImageDto confirmImageUpload(Long flatId, CreateImageConfirmRequest req, Long requesterId, boolean isAdmin);
 	
 }

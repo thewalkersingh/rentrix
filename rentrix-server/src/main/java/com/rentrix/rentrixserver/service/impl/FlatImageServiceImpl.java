@@ -1,5 +1,7 @@
 package com.rentrix.rentrixserver.service.impl;
 
+import com.rentrix.rentrixserver.config.StorageProperties;
+import com.rentrix.rentrixserver.dto.request.CreateImageConfirmRequest;
 import com.rentrix.rentrixserver.dto.response.FlatImageDto;
 import com.rentrix.rentrixserver.entity.Flat;
 import com.rentrix.rentrixserver.entity.FlatImage;
@@ -10,9 +12,11 @@ import com.rentrix.rentrixserver.repository.FlatImageRepository;
 import com.rentrix.rentrixserver.repository.FlatRepository;
 import com.rentrix.rentrixserver.service.FlatImageService;
 import com.rentrix.rentrixserver.service.ImageProcessingService;
+import com.rentrix.rentrixserver.service.PresignedUploadService;
 import com.rentrix.rentrixserver.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +35,8 @@ public class FlatImageServiceImpl implements FlatImageService {
 	private final FlatImageRepository flatImageRepository;
 	private final ImageProcessingService imageProcessing;
 	private final StorageService storage;
+	private final PresignedUploadService presignedUploadService;
+	private final StorageProperties props;
 	
 	@Override
 	@Transactional(readOnly = true)
@@ -138,8 +144,58 @@ public class FlatImageServiceImpl implements FlatImageService {
 		return FlatMapper.toImageDto(saved);
 	}
 	
-	// ── Helpers ───────────────────────────────────────────────────────────
+	@Override
+	public void assertCanManageFlat(Long flatId, Long requesterId, boolean isAdmin) {
+		Flat flat = flatRepository.findById(flatId)
+										  .orElseThrow(() -> ApiException.notFound("Flat not found"));
+		assertCanManage(flat, requesterId, isAdmin);
+	}
 	
+	@Override
+	@Transactional
+	public FlatImageDto confirmImageUpload(Long flatId, CreateImageConfirmRequest req,
+		Long requesterId, boolean isAdmin) {
+		Flat flat = flatRepository.findById(flatId)
+										  .orElseThrow(() -> ApiException.notFound("Flat not found"));
+		assertCanManage(flat, requesterId, isAdmin);
+		
+		// 1. Count check
+		long currentCount = flatImageRepository.countByFlatIdAndDeletedFalse(flatId);
+		if (currentCount >= MAX_IMAGES_PER_FLAT) {
+			throw new FileValidationException(
+				"Maximum of " + MAX_IMAGES_PER_FLAT + " images per flat");
+		}
+		
+		// 2. Verify the object exists in S3
+		boolean verified = presignedUploadService.verifyUploadedObject(
+			props.getPublicBucket(), req.getKey(), req.getSizeBytes(), req.getContentType());
+		if (!verified) {
+			// Clean up the orphaned S3 object
+			presignedUploadService.deleteObject(props.getPublicBucket(), req.getKey());
+			throw new ApiException("Upload verification failed", HttpStatus.BAD_REQUEST);
+		}
+		
+		// 3. Build FlatImage
+		String publicUrl = props.getPublicBaseUrl() + "/" + req.getKey();
+		
+		FlatImage image = new FlatImage();
+		image.setFlat(flat);
+		image.setStorageKey(req.getKey());
+		image.setPublicUrl(publicUrl);
+		image.setContentType(req.getContentType());
+		image.setSizeBytes(req.getSizeBytes());
+		image.setOriginalFilename(req.getOriginalFilename());
+		image.setDisplayOrder((int) currentCount);
+		image.setIsPrimary(currentCount == 0);
+		
+		FlatImage saved = flatImageRepository.save(image);
+		log.info("Image confirmed via presigned upload. flatId={}, imageId={}, key={}",
+			flatId, saved.getId(), req.getKey());
+		
+		return FlatMapper.toImageDto(saved);
+	}
+	
+	// ── Helpers ───────────────────────────────────────────────────────────
 	private void assertCanManage(Flat flat, Long requesterId, boolean isAdmin) {
 		boolean isOwner = flat.getOwner() != null && flat.getOwner().getId().equals(requesterId);
 		boolean isCreator = flat.getCreatedBy() != null && flat.getCreatedBy().getId().equals(requesterId);

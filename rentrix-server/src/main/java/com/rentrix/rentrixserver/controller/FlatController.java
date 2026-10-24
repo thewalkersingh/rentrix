@@ -2,15 +2,16 @@ package com.rentrix.rentrixserver.controller;
 
 import com.rentrix.rentrixserver.dto.filter.FlatFilterRequest;
 import com.rentrix.rentrixserver.dto.request.CreateFlatRequest;
+import com.rentrix.rentrixserver.dto.request.CreateImageConfirmRequest;
+import com.rentrix.rentrixserver.dto.request.CreateImagePresignRequest;
 import com.rentrix.rentrixserver.dto.request.UpdateFlatRequest;
-import com.rentrix.rentrixserver.dto.response.FlatImageDto;
-import com.rentrix.rentrixserver.dto.response.FlatResponse;
-import com.rentrix.rentrixserver.dto.response.FlatSummaryResponse;
-import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.*;
 import com.rentrix.rentrixserver.entity.constants.Role;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.FlatImageService;
 import com.rentrix.rentrixserver.service.FlatService;
+import com.rentrix.rentrixserver.service.PresignedUploadService;
+import com.rentrix.rentrixserver.service.RateLimitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -48,6 +50,8 @@ public class FlatController {
 	
 	private final FlatService flatService;
 	private final FlatImageService flatImageService;
+	private final PresignedUploadService presignedUploadService;
+	private final RateLimitService rateLimitService;
 	
 	/** Public: list flats with optional filters. */
 	@GetMapping
@@ -106,6 +110,29 @@ public class FlatController {
 	@GetMapping("/{id}/images")
 	public List<FlatImageDto> listImages(@PathVariable Long id) {
 		return flatImageService.listImages(id);
+	}
+	
+	/** Owner / creator / ADMIN: request a presigned URL for direct S3 image upload. */
+	@PostMapping("/{id}/images/presigned-url")
+	public ResponseEntity<PresignedUploadResponse> presignImageUpload(@PathVariable Long id,
+		@Valid @RequestBody CreateImagePresignRequest req, @AuthenticationPrincipal CustomUserDetails principal) {
+		boolean isAdmin = "ADMIN".equals(principal.getRole());
+		flatImageService.assertCanManageFlat(id, principal.getId(), isAdmin);
+		PresignedUploadResponse response = presignedUploadService.presignImageUpload(
+			id, req.getFilename(), req.getContentType(), req.getSizeBytes());
+		rateLimitService.check(principal.getId(), "presign_image", 10, Duration.ofHours(1));
+		return ResponseEntity.ok(response);
+	}
+	
+	/** Owner / creator / ADMIN: confirm an uploaded image. */
+	@PostMapping("/{id}/images/confirm")
+	public ResponseEntity<FlatImageDto> confirmImageUpload(
+		@PathVariable Long id,
+		@Valid @RequestBody CreateImageConfirmRequest req,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		boolean isAdmin = "ADMIN".equals(principal.getRole());
+		FlatImageDto image = flatImageService.confirmImageUpload(id, req, principal.getId(), isAdmin);
+		return ResponseEntity.status(201).body(image);
 	}
 	
 	/** Owner / creator / ADMIN: upload an image. */

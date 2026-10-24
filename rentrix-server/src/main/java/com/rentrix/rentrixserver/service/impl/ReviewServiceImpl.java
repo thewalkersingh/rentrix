@@ -1,8 +1,11 @@
 package com.rentrix.rentrixserver.service.impl;
 
+import com.rentrix.rentrixserver.config.StorageProperties;
 import com.rentrix.rentrixserver.dto.projection.RatingAggregate;
+import com.rentrix.rentrixserver.dto.request.CreateProofConfirmRequest;
 import com.rentrix.rentrixserver.dto.request.CreateReviewRequest;
 import com.rentrix.rentrixserver.dto.response.PageResponse;
+import com.rentrix.rentrixserver.dto.response.PresignedUploadResponse;
 import com.rentrix.rentrixserver.dto.response.ReviewDto;
 import com.rentrix.rentrixserver.dto.response.ReviewProofDto;
 import com.rentrix.rentrixserver.entity.Flat;
@@ -18,11 +21,13 @@ import com.rentrix.rentrixserver.repository.ReviewProofRepository;
 import com.rentrix.rentrixserver.repository.ReviewRepository;
 import com.rentrix.rentrixserver.repository.UserRepository;
 import com.rentrix.rentrixserver.service.DocumentProcessingService;
+import com.rentrix.rentrixserver.service.PresignedUploadService;
 import com.rentrix.rentrixserver.service.ReviewService;
 import com.rentrix.rentrixserver.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,9 +50,10 @@ public class ReviewServiceImpl implements ReviewService {
 	private final UserRepository userRepository;
 	private final StorageService storage;
 	private final DocumentProcessingService documentProcessing;
+	private final PresignedUploadService presignedUploadService;
+	private final StorageProperties props;
 	
 	// ── Existing review methods (unchanged, only rebuild DTO with proofs) ──
-	
 	@Override
 	@Transactional(readOnly = true)
 	public PageResponse<ReviewDto> getAllReviews(Pageable pageable) {
@@ -246,6 +252,65 @@ public class ReviewServiceImpl implements ReviewService {
 		storage.deletePrivate(proof.getStorageKey());
 		
 		log.info("Proof {} deleted from review {}", proofId, reviewId);
+	}
+	
+	@Override
+	public PresignedUploadResponse presignProofUpload(Long reviewId, String filename, String contentType,
+		long sizeBytes) {
+		Review review = reviewRepository.findById(reviewId)
+												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		
+		if (review.getStatus() != ReviewStatus.PENDING) {
+			throw ApiException.badRequest("Cannot upload proof after moderation");
+		}
+		
+		long currentCount = reviewProofRepository.countByReviewIdAndDeletedFalse(reviewId);
+		if (currentCount >= MAX_PROOFS_PER_REVIEW) {
+			throw new FileValidationException(
+				"Maximum of " + MAX_PROOFS_PER_REVIEW + " proofs per review");
+		}
+		
+		return presignedUploadService.presignProofUpload(reviewId, filename, contentType, sizeBytes);
+	}
+	
+	@Override
+	@Transactional
+	public ReviewProofDto confirmProofUpload(Long reviewId, CreateProofConfirmRequest req, Long requesterId) {
+		Review review = reviewRepository.findById(reviewId)
+												  .orElseThrow(() -> ApiException.notFound("Review not found"));
+		
+		if (review.getStatus() != ReviewStatus.PENDING) {
+			throw ApiException.badRequest("Cannot upload proof after moderation");
+		}
+		
+		long currentCount = reviewProofRepository.countByReviewIdAndDeletedFalse(reviewId);
+		if (currentCount >= MAX_PROOFS_PER_REVIEW) {
+			throw new FileValidationException(
+				"Maximum of " + MAX_PROOFS_PER_REVIEW + " proofs per review");
+		}
+		
+		boolean verified =
+			presignedUploadService.verifyUploadedObject(props.getPrivateBucket(), req.getKey(), req.getSizeBytes(),
+				req.getContentType());
+		if (!verified) {
+			presignedUploadService.deleteObject(props.getPrivateBucket(), req.getKey());
+			throw new ApiException("Upload verification failed", HttpStatus.BAD_REQUEST);
+		}
+		
+		ReviewProof proof = new ReviewProof();
+		proof.setReview(review);
+		proof.setStorageKey(req.getKey());
+		proof.setContentType(req.getContentType());
+		proof.setSizeBytes(req.getSizeBytes());
+		proof.setOriginalFilename(req.getOriginalFilename());
+		proof.setDisplayOrder((int) currentCount);
+		proof.setVerified(false);
+		
+		ReviewProof saved = reviewProofRepository.save(proof);
+		log.info("Proof confirmed via presigned upload. reviewId={}, proofId={}, key={}",
+			reviewId, saved.getId(), req.getKey());
+		
+		return ReviewMapper.toProofDto(saved);
 	}
 	
 }

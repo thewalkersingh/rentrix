@@ -1,9 +1,13 @@
 package com.rentrix.rentrixserver.controller;
 
+import com.rentrix.rentrixserver.dto.request.CreateProofConfirmRequest;
+import com.rentrix.rentrixserver.dto.request.CreateProofPresignRequest;
+import com.rentrix.rentrixserver.dto.response.PresignedUploadResponse;
 import com.rentrix.rentrixserver.dto.response.ReviewProofDto;
 import com.rentrix.rentrixserver.entity.constants.Role;
 import com.rentrix.rentrixserver.security.CustomUserDetails;
 import com.rentrix.rentrixserver.service.ReviewService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -60,6 +64,27 @@ public class ReviewProofController {
 		boolean isAdmin = "ADMIN".equals(principal.getRole());
 		reviewService.deleteProof(reviewId, proofId, principal.getId(), isAdmin);
 		return ResponseEntity.noContent().build();
+	}
+	
+	@PostMapping("/{reviewId}/proofs/presigned-url")
+	public ResponseEntity<PresignedUploadResponse> presignProofUpload(
+		@PathVariable Long reviewId,
+		@Valid @RequestBody CreateProofPresignRequest req,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		// ownership check happens in service
+		PresignedUploadResponse response = reviewService.presignProofUpload(
+			reviewId, req.getFilename(), req.getContentType(), req.getSizeBytes());
+		return ResponseEntity.ok(response);
+	}
+	
+	@PostMapping("/{reviewId}/proofs/confirm")
+	public ResponseEntity<ReviewProofDto> confirmProofUpload(
+		@PathVariable Long reviewId,
+		@Valid @RequestBody CreateProofConfirmRequest req,
+		@AuthenticationPrincipal CustomUserDetails principal) {
+		// ownership check happens in service
+		ReviewProofDto proof = reviewService.confirmProofUpload(reviewId, req, principal.getId());
+		return ResponseEntity.status(201).body(proof);
 	}
 	
 }
