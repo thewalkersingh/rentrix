@@ -4,7 +4,7 @@ import type { AxiosError } from "axios"
 import { flatsApi } from "@/api/flats"
 import { queryKeys } from "@/api/queryKeys"
 import { useAuthStore } from "@/features/auth/store"
-import { compressImageIfNeeded, formatBytes } from "@/lib/imageCompression.ts"
+import {usePresignedUpload} from "@/hooks/usePresignedUpload.ts";
 
 export function useFlatImages(flatId: number) {
   return useQuery({
@@ -18,16 +18,10 @@ export function useFlatImages(flatId: number) {
 export function useUploadFlatImage(flatId: number) {
   const qc = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (file: File) => {
-      const result = await compressImageIfNeeded(file)
-      if (result.wasCompressed) {
-        console.log(
-          `Compressed image: ${formatBytes(result.originalSize)} → ${formatBytes(result.compressedSize)}`,
-        )
-      }
-      return flatsApi.uploadImage(flatId, result.file)
-    },
+  const flow = usePresignedUpload({
+    presign: (filename, contentType, sizeBytes) =>
+      flatsApi.presignImageUpload(flatId, filename, contentType, sizeBytes),
+    confirm: (payload) => flatsApi.confirmImageUpload(flatId, payload),
     onSuccess: async () => {
       toast.success("Image uploaded")
       await Promise.all([
@@ -36,10 +30,18 @@ export function useUploadFlatImage(flatId: number) {
         qc.invalidateQueries({ queryKey: queryKeys.flats.all }),
       ])
     },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err.response?.data?.message ?? "Upload failed")
+    onError: (err) => {
+      toast.error(err.message || "Upload failed")
     },
   })
+
+  return {
+    upload: flow.upload,
+    isUploading: flow.isUploading,
+    progress: flow.progress,
+    error: flow.error,
+    reset: flow.reset,
+  }
 }
 
 export function useDeleteFlatImage(flatId: number) {

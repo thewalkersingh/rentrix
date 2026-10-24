@@ -3,6 +3,7 @@ import {
   ImageGridUploader,
   type GridUploadItem,
 } from "@/features/flats/components/ImageGridUploader"
+import { UploadProgressBar } from "@/components/common/UploadProgressBar"
 
 interface Props {
   reviewId: number
@@ -34,21 +35,25 @@ export function ProofUploader({ reviewId, disabled }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <ImageGridUploader
         items={items}
         maxItems={MAX_PROOFS}
         columns={3}
         accept=".pdf,.jpg,.jpeg,.png,.webp"
         maxSizeMB={MAX_SIZE_MB}
-        uploading={upload.isPending}
+        uploading={upload.isUploading}
         disabled={disabled || remove.isPending}
         emptyLabel="Add proof"
         emptyHint="PDF, JPG, PNG"
-        onUpload={(file) => upload.mutate(file)}
+        onUpload={upload.upload}
         onDelete={(id) => remove.mutate(id)}
-        // no setPrimary for proofs
       />
+
+      {upload.progress && (
+        <UploadProgressBar percent={upload.progress.percent} label="Uploading proof to S3" />
+      )}
+
       <p className="text-xs text-muted-foreground">
         Upload rent agreement, utility bill, or bank statement. Reviews with proof get a "Verified
         stay" badge once approved.

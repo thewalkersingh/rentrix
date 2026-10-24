@@ -19,3 +19,9 @@ export interface AddressDto {
   state?: string
   zipCode?: string
 }
+export interface PresignedUploadResponse {
+  uploadUrl: string
+  key: string
+  publicUrl: string | null
+  expiresAt: string
+}

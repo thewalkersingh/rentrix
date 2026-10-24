@@ -4,7 +4,7 @@ import type { AxiosError } from "axios"
 import { reviewsApi } from "@/api/reviews"
 import { queryKeys } from "@/api/queryKeys"
 import { useAuthStore } from "@/features/auth/store"
-import { compressImageIfNeeded, formatBytes } from "@/lib/imageCompression.ts"
+import {usePresignedUpload} from "@/hooks/usePresignedUpload.ts";
 
 export function useReviewProofs(reviewId: number) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -20,16 +20,10 @@ export function useReviewProofs(reviewId: number) {
 export function useUploadProof(reviewId: number) {
   const qc = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (file: File) => {
-      const result = await compressImageIfNeeded(file)
-      if (result.wasCompressed) {
-        console.log(
-          `Compressed proof: ${formatBytes(result.originalSize)} → ${formatBytes(result.compressedSize)}`,
-        )
-      }
-      return reviewsApi.uploadProof(reviewId, result.file)
-    },
+  const flow = usePresignedUpload({
+    presign: (filename, contentType, sizeBytes) =>
+      reviewsApi.presignProofUpload(reviewId, filename, contentType, sizeBytes),
+    confirm: (payload) => reviewsApi.confirmProofUpload(reviewId, payload),
     onSuccess: async () => {
       toast.success("Proof uploaded")
       await Promise.all([
@@ -38,10 +32,18 @@ export function useUploadProof(reviewId: number) {
         qc.invalidateQueries({ queryKey: queryKeys.reviews.pending }),
       ])
     },
-    onError: (err: AxiosError<{ message?: string }>) => {
-      toast.error(err.response?.data?.message ?? "Upload failed")
+    onError: (err) => {
+      toast.error(err.message || "Upload failed")
     },
   })
+
+  return {
+    upload: flow.upload,
+    isUploading: flow.isUploading,
+    progress: flow.progress,
+    error: flow.error,
+    reset: flow.reset,
+  }
 }
 
 export function useDeleteProof(reviewId: number) {

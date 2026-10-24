@@ -4,6 +4,7 @@ import type {
   FlatFilters,
   FlatImage,
   FlatSummary,
+  PresignedUploadResponse,
   UpdateFlatRequest,
 } from "@/types"
 import type { Page } from "@/types"
@@ -27,10 +28,10 @@ export const flatsApi = {
   remove: (id: number): Promise<void> => api.delete(`/flats/${id}`).then(() => undefined),
 
   // ── Images ───────────────────────────────────────────────────────────
-
   listImages: (flatId: number): Promise<FlatImage[]> =>
     api.get(`/flats/${flatId}/images`).then((r) => r.data),
 
+  // Legacy multipart upload — kept as fallback
   uploadImage: (flatId: number, file: File): Promise<FlatImage> => {
     const formData = new FormData()
     formData.append("file", file)
@@ -40,6 +41,26 @@ export const flatsApi = {
       })
       .then((r) => r.data)
   },
+
+  // Presigned flow
+  presignImageUpload: (
+    flatId: number,
+    filename: string,
+    contentType: string,
+    sizeBytes: number,
+  ): Promise<PresignedUploadResponse> =>
+    api
+      .post(`/flats/${flatId}/images/presigned-url`, {
+        filename,
+        contentType,
+        sizeBytes,
+      })
+      .then((r) => r.data),
+
+  confirmImageUpload: (
+    flatId: number,
+    payload: { key: string; sizeBytes: number; contentType: string; originalFilename: string },
+  ): Promise<FlatImage> => api.post(`/flats/${flatId}/images/confirm`, payload).then((r) => r.data),
 
   deleteImage: (flatId: number, imageId: number): Promise<void> =>
     api.delete(`/flats/${flatId}/images/${imageId}`).then(() => undefined),

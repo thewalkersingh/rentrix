@@ -1,4 +1,11 @@
-import type { CreateReviewRequest, Page, Review, ReviewProof, ReviewStatus } from "@/types"
+import type {
+  CreateReviewRequest,
+  Page,
+  PresignedUploadResponse,
+  Review,
+  ReviewProof,
+  ReviewStatus,
+} from "@/types"
 import { api } from "./client"
 
 export const reviewsApi = {
@@ -20,15 +27,37 @@ export const reviewsApi = {
   listProofs: (reviewId: number): Promise<ReviewProof[]> =>
     api.get(`/reviews/${reviewId}/proofs`).then((r) => r.data),
 
-  uploadProof: (reviewId: number, file: File): Promise<ReviewProof> => {
+  // Legacy multipart upload
+  uploadProof: (reviewId: number, file: File): Promise<void> => {
     const formData = new FormData()
     formData.append("file", file)
     return api
       .post(`/reviews/${reviewId}/proofs`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
-      .then((r) => r.data)
+      .then(() => undefined)
   },
+
+  // Presigned flow
+  presignProofUpload: (
+    reviewId: number,
+    filename: string,
+    contentType: string,
+    sizeBytes: number,
+  ): Promise<PresignedUploadResponse> =>
+    api
+      .post(`/reviews/${reviewId}/proofs/presigned-url`, {
+        filename,
+        contentType,
+        sizeBytes,
+      })
+      .then((r) => r.data),
+
+  confirmProofUpload: (
+    reviewId: number,
+    payload: { key: string; sizeBytes: number; contentType: string; originalFilename: string },
+  ): Promise<ReviewProof> =>
+    api.post(`/reviews/${reviewId}/proofs/confirm`, payload).then((r) => r.data),
 
   getProofUrl: (reviewId: number, proofId: number): Promise<{ url: string }> =>
     api.get(`/reviews/${reviewId}/proofs/${proofId}/url`).then((r) => r.data),

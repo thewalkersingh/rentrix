@@ -5,6 +5,7 @@ import {
   useUploadFlatImage,
 } from "../hooks/useFlatImages"
 import { ImageGridUploader, type GridUploadItem } from "./ImageGridUploader"
+import { UploadProgressBar } from "@/components/common/UploadProgressBar"
 
 const MAX_IMAGES = 10
 const MAX_SIZE_MB = 15
@@ -33,19 +34,25 @@ export function FlatImageUploader({ flatId }: { flatId: number }) {
   }
 
   return (
-    <ImageGridUploader
-      items={items}
-      maxItems={MAX_IMAGES}
-      columns={5}
-      accept="image/jpeg,image/png,image/webp"
-      maxSizeMB={MAX_SIZE_MB}
-      uploading={uploadImage.isPending}
-      disabled={deleteImage.isPending || setPrimary.isPending}
-      emptyLabel="Add image"
-      emptyHint="JPG, PNG, WebP"
-      onUpload={(file) => uploadImage.mutate(file)}
-      onDelete={(id) => deleteImage.mutate(id)}
-      onSetPrimary={(id) => setPrimary.mutate(id)}
-    />
+    <div className="space-y-3">
+      <ImageGridUploader
+        items={items}
+        maxItems={MAX_IMAGES}
+        columns={5}
+        accept="image/jpeg,image/png,image/webp"
+        maxSizeMB={MAX_SIZE_MB}
+        uploading={uploadImage.isUploading}
+        disabled={deleteImage.isPending || setPrimary.isPending}
+        emptyLabel="Add image"
+        emptyHint="JPG, PNG, WebP"
+        onUpload={uploadImage.upload}
+        onDelete={(id) => deleteImage.mutate(id)}
+        onSetPrimary={(id) => setPrimary.mutate(id)}
+      />
+
+      {uploadImage.progress && (
+        <UploadProgressBar percent={uploadImage.progress.percent} label="Uploading image to S3" />
+      )}
+    </div>
   )
 }
