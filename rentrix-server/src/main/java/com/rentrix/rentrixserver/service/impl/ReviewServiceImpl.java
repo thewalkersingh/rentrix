@@ -63,9 +63,8 @@ public class ReviewServiceImpl implements ReviewService {
 	@Override
 	@Transactional(readOnly = true)
 	public ReviewDto getReviewById(Long id) {
-		Review review = reviewRepository
-								 .findById(id)
-								 .orElseThrow(() -> ApiException.notFound("Review not found with id: " + id));
+		Review review = reviewRepository.findById(id)
+												  .orElseThrow(() -> ApiException.notFound("Review not found with id: " + id));
 		return ReviewMapper.toDto(review);
 	}
 	
@@ -79,9 +78,8 @@ public class ReviewServiceImpl implements ReviewService {
 	@Override
 	@Transactional
 	public ReviewDto createReview(Long flatId, Long userId, CreateReviewRequest req) {
-		Flat flat = flatRepository
-							.findById(flatId)
-							.orElseThrow(() -> ApiException.notFound("Flat not found with id: " + flatId));
+		Flat flat = flatRepository.findById(flatId)
+										  .orElseThrow(() -> ApiException.notFound("Flat not found with id: " + flatId));
 		
 		if (flat.getOwner() != null && flat.getOwner().getId().equals(userId)) {
 			throw ApiException.badRequest("You cannot review your own flat");
@@ -255,7 +253,8 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 	
 	@Override
-	public PresignedUploadResponse presignProofUpload(Long reviewId, String filename, String contentType,
+	public PresignedUploadResponse presignProofUpload(Long reviewId, Long requesterId, String filename,
+		String contentType,
 		long sizeBytes) {
 		Review review = reviewRepository.findById(reviewId)
 												  .orElseThrow(() -> ApiException.notFound("Review not found"));

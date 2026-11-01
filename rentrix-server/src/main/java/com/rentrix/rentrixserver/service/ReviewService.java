@@ -54,7 +54,7 @@ public interface ReviewService {
 	 */
 	void deleteProof(Long reviewId, Long proofId, Long requesterId, boolean isAdmin);
 	
-	PresignedUploadResponse presignProofUpload(Long reviewId, String filename, String contentType, long sizeBytes);
+	PresignedUploadResponse presignProofUpload(Long reviewId, Long requesterId, String filename, String contentType, long sizeBytes);
 	
 	ReviewProofDto confirmProofUpload(Long reviewId, CreateProofConfirmRequest req, Long requesterId);
 	
